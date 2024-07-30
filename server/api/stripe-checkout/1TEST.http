@@ -1,0 +1,13 @@
+### StripeCheckout 1
+
+POST {{api}}/api/stripe-checkout/price_1PgIbtRsnESp3u143u5Q3hGj
+
+{ "quantity": 1 }
+
+### Callback
+POST {{api}}/api/stripe-checkout/callback
+Content-Type: application/json
+
+{
+
+}

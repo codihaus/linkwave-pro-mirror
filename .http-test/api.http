@@ -1,0 +1,23 @@
+GET https://skymoon-cms.codihaus.io/items/languages
+Content-Type: application/json
+Authorization: Bearer MGQy9aui-aICkTysTYQTeva8gmQwNfK4
+
+###
+GET https://skymoon-cms.codihaus.io/users/me?fields[]=*
+Content-Type: application/json
+Authorization: Bearer MGQy9aui-aICkTysTYQTeva8gmQwNfK4
+
+
+
+### Login
+POST {{url}}/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "abc@codihaus.com",
+    "password": "123456"
+}
+
+### Get Users
+GET {{url}}/api/users/?email=abc
+Content-Type: application/json
