@@ -1,0 +1,2 @@
+
+GET {{base}}/api/items/categories?limit=1&fields[]=id
