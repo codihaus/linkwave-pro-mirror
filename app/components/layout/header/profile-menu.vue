@@ -5,7 +5,7 @@
             <div class="font-light text-sm">{{ currentUser?.email }}</div>
             <n-button class="" @click="logout">Sign out</n-button>
         </div>
-        <div class="border border-hex-eee rounded-lg mt-3">
+        <!-- <div class="border border-hex-eee rounded-lg mt-3">
             <div class="flex items-center justify-between gap-3 p-3 border-b border-hex-eee">
                 <div>Usage</div>
                 <div>{{ quota?.remaining }}/{{quota?.current_plan?.max_files_upload}} PDF Files</div>
@@ -17,7 +17,7 @@
                 </div>
                 <n-button type="primary" class="" @click="showPricingModal = true">Upgrade</n-button>
             </div>
-        </div>
+        </div> -->
     </div>
 </template>
 <script lang="ts" setup>
@@ -31,9 +31,9 @@ const nuxtApiAuth = useNADAuth()
 const analyzeSocket = useState('analyzeSocket')
 
 async function logout() {
-    nuxtApiAuth.logout()
+    await nuxtApiAuth.logout()
     await analyzeSocket.value?.disconnect()
-    navigateTo('/login')
+    await navigateTo('/login')
 }
 
 // const { currentPlan, data: plans } = await usePlans()

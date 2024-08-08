@@ -1,5 +1,5 @@
 <template>
-    <n-layout-header bordered class="px-4 lg:px-10 py-4 flex items-center gap-5 sticky top-0 z-9">
+    <n-layout-header bordered class="px-4 lg:px-6 py-4 flex items-center gap-5 sticky top-0 z-100 bg-neutral-07">
         <div class="leading-0 lg:hidden">
             <n-button text @click="onCollapse">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -7,32 +7,27 @@
                 </svg>
             </n-button>
         </div>
-        <div>
-            <layout-logo />
+        <div class="lg:w-2/12">
+            <layout-logo dark/>
         </div>
-        <div>
-            <ul class="header-menu hidden md:flex md:gap-1 justify-center leading-normal">
-                <li>
-                    <a class="px-3 py-3 text-heading-02 hover:text-primary" href="https://linkwave.ai">Homepage</a>
-                </li>
-                <li v-for="item in menu">
-                    <nuxt-link
-                        class="px-3 py-3 text-heading-02 hover:text-primary"
-                        :to="item?.to"
-                        :href="item?.to"
-                        :active-class="getActiveClass(item)"
-                    >
-                        <span class="text" :title="item?.label">{{ item?.label }}</span>
-                    </nuxt-link>
-                </li>
-            </ul>
+        <div class="lg:w-4/10">
+            <n-input
+                v-model:value="searchInput"
+                type="text"
+                round
+                placeholder="Enter the name of your project"
+                style="--n-border: 1px solid rgba(35, 38, 39, 0.90)"
+            >
+                <template #prefix>
+                    <i class="i-custom-search text-2xl leading-0"></i>
+                </template>
+            </n-input>
 
         </div>
         <div class="ml-auto flex items-center gap-5">
-            <div id="header-analyzing"></div>
+            <slot name="header-right"></slot>
             <n-dropdown trigger="click" placement="bottom-end" :options="options" @select="handleSelect">
-                <div class=" flex items-center gap-2 text-heading-02">
-                    {{ currentUser?.first_name }}
+                <div class="flex items-center gap-2 text-heading-02 cursor-pointer">
                     <n-avatar
                         round
                         size="small"
@@ -42,7 +37,6 @@
                             {{ currentUser?.first_name?.at(0) || '' }}{{ currentUser?.last_name?.at(0) || '' }}
                         </template>
                     </n-avatar>
-                    <i class="i-custom-down"></i>
                 </div>
             </n-dropdown>
         </div>
@@ -52,7 +46,7 @@
 <script setup lang="ts">
 import { readItem } from '@directus/sdk';
 import { set } from 'lodash-es';
-import analyzerFile from '~/app/views/chat/components/analyzer-file.vue';
+// import analyzerFile from '~/app/views/chat/components/analyzer-file.vue';
 import { LayoutHeaderProfileMenu } from '#components'
 
 const route = useRoute()
@@ -94,9 +88,9 @@ const nuxtApiAuth = useNADAuth()
 const analyzeSocket = useState('analyzeSocket')
 
 async function logout() {
-    nuxtApiAuth.logout()
+    await nuxtApiAuth.logout()
     await analyzeSocket.value?.disconnect()
-    navigateTo('/login')
+    await navigateTo('/login')
 }
 
 
@@ -108,12 +102,8 @@ function onCollapse() {
     sidebarCollapsed.value = !sidebarCollapsed.value
 }
 
+const searchInput = ref()
+
 </script>
 <style lang="scss">
-.active {
-    border-bottom: 2px solid;
-    border-bottom-left-radius: 4px;
-    border-bottom-right-radius: 4px;
-    background: linear-gradient(0deg, rgba(20, 227, 174, 0.5) 0%, rgba(20, 227, 174, 0) 43.48%);
-}
 </style>

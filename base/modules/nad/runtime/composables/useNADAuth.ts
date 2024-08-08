@@ -41,8 +41,9 @@ export const useNADAuth = () => {
 
     const logout = async () => {
         await asyncHandle.process(async () => {
-            api.logout()
-            setUserLogin({})
+            return await api.logout().finally(() => {
+                setUserLogin({})
+            })
         });
     }
 

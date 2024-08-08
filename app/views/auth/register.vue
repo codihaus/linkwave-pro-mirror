@@ -1,82 +1,93 @@
 <template>
-    <div class="w-full flex flex-wrap">
-        <div class="auth-img hidden lg:block w-full lg:w-7/12"></div>
-        <div class="w-full lg:w-5/12 flex items-center justify-center bg-black bg-opacity-50 p-4">
-            <ui-gradient-corner class="w-full lg:max-w-96" wrapper-class="bg-dark-02">
-                <div class="px-4 lg:px-8 py-10">
-                    <div class="text-center"><layout-logo class="inline-block"/></div>
-                    <n-form
-                        v-if="!success"
-                        class="mt-6"
-                        ref="formRef"
-                        :rules="rules"
-                        :model="model"
-                        @submit.prevent="() => onSubmit(handleSubmit)"
+    <n-tabs v-model:value="tab" type="segment" size="large" animated @update:value="onChangeTab">
+        <n-tab-pane name="login" tab="Sign in" >
+            
+        </n-tab-pane>
+        <n-tab-pane name="register" tab="Create account">
+            <n-button
+                v-if="!success"
+                tag="a"
+                block
+                href="/api/auth/login/google"
+                class="lt-lg:px-4 col-span-2 text-neutral-01 font-semibold" size="large" :style="{'--n-border': '2px solid #343839'}">
+                <icons-google class="mr-4" />
+                Continue with Google
+            </n-button>
+            <n-divider v-if="!success">
+                OR
+            </n-divider>
+            <n-form
+                v-if="!success"
+                class="mt-6"
+                ref="formRef"
+                :rules="rules"
+                :model="model"
+                @submit.prevent="() => onSubmit(handleSubmit)"
+            >
+                <n-grid :span="24" :x-gap="10">
+                    <n-form-item-gi :span="12" :show-label="false" label="First name" path="first_name">
+                        <n-input v-model:value="model.first_name" size="large" placeholder="First name" />
+                    </n-form-item-gi>
+                    <n-form-item-gi :span="12" :show-label="false" label="Last name" path="last_name">
+                        <n-input v-model:value="model.last_name" size="large" placeholder="Last name" />
+                    </n-form-item-gi>
+                    <n-form-item-gi :span="12" :show-label="false" label="Phone number" path="phone">
+                        <n-input v-model:value="model.phone" size="large" placeholder="Phone number" />
+                    </n-form-item-gi>
+                    <n-form-item-gi :span="12" :show-label="false" label="Company" path="company">
+                        <n-input v-model:value="model.company" size="large" placeholder="Company" />
+                    </n-form-item-gi>
+                </n-grid>
+                
+                <n-form-item :show-label="false" label="Register for purpose" path="register_for_purpose">
+                    <n-select
+                        v-model:value="model.register_for_purpose"
+                        placeholder="Register for purpose"
+                        :options="purposeOptions"
+                        size="large"
+                    />
+                </n-form-item>
+                <n-form-item :show-label="false" label="Email" path="email">
+                    <n-input v-model:value="model.email" size="large" placeholder="Email address"></n-input>
+                </n-form-item>
+                <n-form-item :show-label="false" path="password" label="Password">
+                    <n-input v-model:value="model.password" size="large" type="password" placeholder="Password (at least 8 characters)"></n-input>
+                </n-form-item>
+                <n-form-item :show-label="false" path="retype_password" label="Re-type Password">
+                    <n-input v-model:value="model.retype_password" size="large" type="password" placeholder="Re-type password"></n-input>
+                </n-form-item>
+                <n-form-item :show-label="false" path="allow_term">
+                    <n-checkbox v-model:checked="model.allow_term" class="text-neutral-04">I consent to receive marketing communications such as emails and SMS from LinkwaveAI as well as to its Terms of Service and Privacy Policy.</n-checkbox>
+                </n-form-item>
+                <n-button
+                    block
+                    type="primary"
+                    attr-type="submit"
+                    :loading="pending"
+                    :disabled="submittable"
+                    size="large"
+                    class="mt-1.5"
                     >
-                        <n-grid :span="24" :x-gap="10">
-                            <n-form-item-gi :span="12" :show-label="false" label="First name" path="first_name">
-                                <n-input v-model:value="model.first_name" size="large" placeholder="First name" />
-                            </n-form-item-gi>
-                            <n-form-item-gi :span="12" :show-label="false" label="Last name" path="last_name">
-                                <n-input v-model:value="model.last_name" size="large" placeholder="Last name" />
-                            </n-form-item-gi>
-                            <n-form-item-gi :span="12" :show-label="false" label="Phone number" path="phone">
-                                <n-input v-model:value="model.phone" size="large" placeholder="Phone number" />
-                            </n-form-item-gi>
-                            <n-form-item-gi :span="12" :show-label="false" label="Company" path="company">
-                                <n-input v-model:value="model.company" size="large" placeholder="Company" />
-                            </n-form-item-gi>
-                        </n-grid>
-                        
-                        <n-form-item :show-label="false" label="Register for purpose" path="register_for_purpose">
-                            <n-select
-                                v-model:value="model.register_for_purpose"
-                                placeholder="Register for purpose"
-                                :options="purposeOptions"
-                                size="large"
-                            />
-                        </n-form-item>
-                        <n-form-item :show-label="false" label="Email" path="email">
-                            <n-input v-model:value="model.email" size="large" placeholder="Email address"></n-input>
-                        </n-form-item>
-                        <n-form-item :show-label="false" path="password" label="Password">
-                            <n-input v-model:value="model.password" size="large" type="password" placeholder="Password (at least 8 characters)"></n-input>
-                        </n-form-item>
-                        <n-form-item :show-label="false" path="retype_password" label="Re-type Password">
-                            <n-input v-model:value="model.retype_password" size="large" type="password" placeholder="Re-type password"></n-input>
-                        </n-form-item>
-                        <n-form-item :show-label="false" path="allow_term">
-                            <n-checkbox v-model:checked="model.allow_term">I consent to receive marketing communications such as emails and SMS from LinkwaveAI as well as to its Terms of Service and Privacy Policy.</n-checkbox>
-                        </n-form-item>
-                        <n-button
-                            block
-                            type="primary"
-                            attr-type="submit"
-                            :loading="pending"
-                            :disabled="submittable"
-                            size="large"
-                            class="mt-1.5"
-                            >
-                            Sign up
-                        </n-button>
-                        <div class="mt-4.5 text-center">
-                            <nuxt-link :to="{name: 'forgot-password'}" class="text-primary">Forgot password?</nuxt-link>
-                        </div>
-                    </n-form>
-                    <div v-else class="mt-6 text-center">
-                        <i class="inline-block text-7rem text-primary i-lets-icons:check-fill"></i>
-                        <div class="text-heading leading-title mt-7.5">Your account has been created successfully!</div>
-                        <n-button
-                            type="primary"
-                            block
-                            size="large"
-                            class="mt-4"
-                            @click="navigateTo('/login')"
-                        >Let’s Start</n-button>
-                    </div>
+                    Sign up
+                </n-button>
+                <div class="mt-4.5 text-center">
+                    <nuxt-link :to="{name: 'forgot-password'}" class="text-primary">Forgot password?</nuxt-link>
                 </div>
-            </ui-gradient-corner>
+            </n-form>
+        </n-tab-pane>
+    </n-tabs>
+    <div v-if="success" class="mt-6">
+        <div class="inline-block bg-primary rounded-full p-10 leading-0">
+            <i class="inline-block text-3rem text-neutral-07 i-custom-check"></i>
         </div>
+        <div class="text-heading leading-title mt-7.5 text-lg lg:text-2xl font-bold">Your account has been created successfully!</div>
+        <n-button
+            type="primary"
+            block
+            size="large"
+            class="mt-4"
+            @click="navigateTo('/login')"
+        >Let’s Start</n-button>
     </div>
 </template>
 
@@ -86,6 +97,14 @@ definePageMeta({
 })
 
 const route = useRoute()
+
+const tab = ref('register')
+
+function onChangeTab(tab: string = 'register') {
+    navigateTo({
+        name: tab
+    })
+}
 
 const model = ref({
     first_name: "",
