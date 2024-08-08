@@ -51,6 +51,12 @@ export default defineNuxtConfig({
                 propsDestructure: true,
             },
         },
+        server: {
+            hmr: {
+                protocol: 'ws',
+                clientPort: '3000'
+            }
+        }
     },
     css: [
         "@unocss/reset/tailwind.css",

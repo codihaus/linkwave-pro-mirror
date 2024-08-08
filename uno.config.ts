@@ -52,7 +52,7 @@ export default defineConfig({
     theme: {
         colors: {
             primary: "#14E3AE",
-            secondary: '#FFC83B',
+            secondary: '#3FDD78',
             heading: '#F0F5FB',
             'heading-02': '#E7E7E7',
             content: '#929FBA',
@@ -62,6 +62,26 @@ export default defineConfig({
                 '02': '#0A142C',
                 '03': '#323C61',
                 '04': '#455276',
+            },
+            neutral: {
+                '01': '#FEFEFE',
+                '02': '#F3F5F7',
+                '03': '#E8ECEF',
+                '04': '#6C7275',
+                '05': '#343839',
+                '06': '#232627',
+                '07': '#141718',
+                '08': '#101212',
+                '09': '#1D1D1D',
+            },
+            accent: {
+                '01': '#D84C10',
+                '02': '#3E90F0',
+                '03': '#8E55EA',
+                '04': '#8C6584',
+                '05': '#DDA73F',
+                '06': '#52BA69',
+                '07': '#E68A1D',
             }
         },
         fontSize: {},
