@@ -145,7 +145,7 @@
             </div>
         </div>
     </layout-view>
-    <lazy-create-project v-model="showCreateProjectModal" />
+    <lazy-create-project v-model="showCreateProjectModal" @create="refresh"/>
 </template>
 <script setup lang="ts">
 import { readItems, aggregate } from '@directus/sdk'
@@ -167,7 +167,7 @@ const api = useNAD()
 
 const page = ref(1)
 const limit = ref(8)
-const { data: projects, pending } = await useAsyncData(
+const { data: projects, pending, refresh } = await useAsyncData(
     'projects',
     () => api.request(readItems('projects', {
         fields: ['name', 'logo', 'type', 'location.name', 'description'],
@@ -179,11 +179,12 @@ const { data: projects, pending } = await useAsyncData(
                         _eq: 'published'
                     },
                 },
-                // {
-                //     user_created: currentUser.value?.id   
-                // }
+                {
+                    user_created: currentUser.value?.id   
+                }
             ]
         },
+        sort: '-date_created',
         limit: limit.value,
         page: page.value
     })),
@@ -206,11 +207,12 @@ const { data: totalPage } = await useAsyncData(() => api.request(aggregate('proj
                         _eq: 'published'
                     },
                 },
-                // {
-                //     user_created: currentUser.value?.id   
-                // }
+                {
+                    user_created: currentUser.value?.id   
+                }
             ]
         },
+        sort: '-date_created',
     },
     aggregate: {
         countDistinct: ['id']
