@@ -94,6 +94,17 @@ const themeConfig = ref<ThemeConfig>({
             footerBorderTop: '1px solid #323C61',
             closeIconColor: '#929FBA',
         },
+        Pagination: {
+            itemTextColor: '#E8ECEF',
+            buttonIconColor: '#6C7275',
+            buttonColorHover: '#232627',
+            buttonIconColorHover: '#14E3AE',
+            itemColorDisabled: '#343839',
+            itemBorderHover: '1px solid #14E3AE',
+            itemBorderDisabled: '1px solid #343839',
+            buttonBorder: '1px solid #6C7275',
+            buttonBorderHover: '1px solid #14E3AE',
+        },
         Scrollbar: {
             color: '#14E3AE',
         },
@@ -108,17 +119,9 @@ const themeConfig = ref<ThemeConfig>({
             tabTextColorActiveSegment: '#E8ECEF',
             panePaddingLarge: '32px 0 0 0'
         },
-        Pagination: {
-            itemTextColor: '#E8ECEF',
-            buttonIconColor: '#6C7275',
-            buttonColorHover: '#232627',
-            buttonIconColorHover: '#14E3AE',
-            itemColorDisabled: '#343839',
-            itemBorderHover: '1px solid #14E3AE',
-            itemBorderDisabled: '1px solid #343839',
-            buttonBorder: '1px solid #6C7275',
-            buttonBorderHover: '1px solid #14E3AE',
-        }
+        Upload: {
+            draggerColor: '#232627',
+        },
     },
 
     light: {
