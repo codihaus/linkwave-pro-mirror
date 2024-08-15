@@ -300,6 +300,9 @@ const { data: stateOptions } = await useAsyncData(
         } */]),
         transform: (response) => {
             project.value.location = null
+            if( !project.value?.country ) {
+                return []
+            }
             return response?.items?.map(({id, name}) => ({
                 label: name,
                 value: id
