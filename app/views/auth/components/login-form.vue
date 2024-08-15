@@ -1,6 +1,16 @@
 <template>
-    <div class="px-8 py-10">
-        <div class="text-center"><layout-logo class="inline-block"/></div>
+    <div class="">
+        <n-button
+            tag="a"
+            block
+            href="/api/auth/login/google"
+            class="lt-lg:px-4 col-span-2 text-neutral-01 font-semibold" size="large" :style="{'--n-border': '2px solid #343839'}">
+            <icons-google class="mr-4" />
+            Continue with Google
+        </n-button>
+        <n-divider >
+            OR
+        </n-divider>
         <n-form
             class="mt-6"
             ref="formRef"
@@ -16,6 +26,7 @@
             </n-form-item>
             <n-button
                 block
+                strong
                 type="primary"
                 attr-type="submit"
                 :loading="pending"

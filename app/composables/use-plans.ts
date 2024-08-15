@@ -1,6 +1,6 @@
 import { readItems } from '@directus/sdk'
 
-export async function usePlans() {
+export async function usePlans(options = {}) {
     const api = useNAD()
     const currentUser = useState("currentUser")
     const currentPlan = useState('currentPlan')
@@ -31,7 +31,9 @@ export async function usePlans() {
                     }
                     return plan
                 })
-            }
+            },
+            lazy: true,
+            ...options,
         }
     )
 
