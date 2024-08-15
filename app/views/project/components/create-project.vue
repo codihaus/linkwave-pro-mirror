@@ -86,21 +86,16 @@
                                 v-model:value="project.project_members"
                                 multiple
                                 filterable
-                                placeholder="Invite people"
+                                placeholder="example@email.com,..."
                                 :options="memberOptions"
                                 :loading="loadingUser"
                                 clearable
                                 tag
                             />
-                            <!-- <div class="w-full flex gap-3 px-4 py-3 justify-between border border-neutral-05 rounded">
-                                <div class="text-neutral-02">Invite people</div>
-                                <n-button text icon style="--n-height: 24px;">
-                                    <template #icon>
-                                        <i class="i-custom-add-user text-2xl leading-0" />
-                                    </template>
-                                </n-button>
-                            </div> -->
                         </n-form-item>
+                        <div class="text-neutral-04">
+                            Fill email and press enter
+                        </div>
                         
                     </n-form>
                 </div>
@@ -208,22 +203,28 @@ const project = ref({
     type: 'residential',
     description: null,
     share: null,
-    project_members: ['nhuvaynhe1235@gmail.com'],
+    project_members: null,
 });
 
 const { formRef, rules, pending, apiErrors, onSubmit, edited, reset, updateResetValue } = useNaiveForm(project);
 
 rules.value = {
-    email: [
+    name: [
         {
             required: true,
-            message: "Wrong email format!",
-            // trigger: ['input', 'blur'],
-            validator: (rule, value) => value === null || isValidEmail(value),
+            message: "This field is required!",
         },
+    ],
+    country: [
         {
-            message: "Wrong credentials",
-            validator: () => !apiErrors.value.wrongCredentials,
+            required: true,
+            message: "This field is required!",
+        },
+    ],
+    location: [
+        {
+            required: true,
+            message: "This field is required!",
         },
     ],
     // project_members: [
