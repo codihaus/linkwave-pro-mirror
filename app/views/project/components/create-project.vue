@@ -193,6 +193,8 @@ const showModal = defineModel('modelValue', {
 
 const emit = defineEmits(['create'])
 
+const notify = useNaiveNotification()
+
 const project = ref({
     name: null,
     client_name: null,
@@ -378,9 +380,21 @@ async function handleSubmit() {
         }))
         reset()
         resetUploadField()
+        notify.create({
+            title: 'Created project successfully!',
+            type: 'success',
+            description: `Project: ${data?.name}`,
+            duration: 3000
+        })
         emit('create')
+        showModal.value = false
     } catch (error) {
-        
+        notify.create({
+            title: 'Create project failed!',
+            type: 'error',
+            description: `Project: ${data?.name}. Please try again!`,
+            duration: 3000
+        })
     }
 }
 
