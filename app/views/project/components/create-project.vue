@@ -86,15 +86,15 @@
                                 v-model:value="project.project_members"
                                 multiple
                                 filterable
-                                placeholder="example@email.com,..."
+                                placeholder="example1@email.com, example2@email.com..."
                                 :options="memberOptions"
                                 :loading="loadingUser"
                                 clearable
                                 tag
                             />
                         </n-form-item>
-                        <div class="text-neutral-04">
-                            Fill email and press enter
+                        <div v-if="project.share" class="text-neutral-04">
+                            Fill email and press enter to invite member to project
                         </div>
                         
                     </n-form>
