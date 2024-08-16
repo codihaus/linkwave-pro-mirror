@@ -108,6 +108,12 @@ async function handleSubmit() {
         accessToken.value = response?.access_token
 
         message.success("Logged in successfully!")
+        notify.create({
+            title: 'Logged in successfully!',
+            type: 'success',
+            description: 'Welcome!',
+            duration: 3000
+        })
         navigateTo({
             name: 'home'
         })

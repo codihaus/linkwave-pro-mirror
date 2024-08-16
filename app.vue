@@ -151,7 +151,7 @@ const themeConfig = ref<ThemeConfig>({
 })
 
 useHead({
-    title: 'Pro - LinkWaveAI',
+    title: 'Pro - LinkWavePro',
     meta: [
         {
             name: 'description',

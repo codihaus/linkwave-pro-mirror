@@ -47,11 +47,9 @@ export const useNADAuth = () => {
         });
     }
 
-    const register = async(credentials) => asyncHandle.process(async () => {
+    const register = async(credentials) => await asyncHandle.process(async () => {
         console.log('register', createUser(credentials))
-        return await api.request(createUser(credentials)).catch((e) => {
-            return e
-        });
+        return await api.request(createUser(credentials))
     })
 
     return {

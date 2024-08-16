@@ -21,7 +21,7 @@
             type="primary"
             attr-type="submit"
             :loading="pending"
-            :disabled="pending || !edited"
+            :disabled="pending"
             size="large"
             >
             Reset password
@@ -33,11 +33,13 @@
     </n-form>
     <div v-else class="mt-6">
         <div v-if="!route.query?.token" class="text-2xl font-semibold mb-7 text-neutral-01">Email sent</div>
-        <n-alert v-if="!route.query?.token" title="" type="success" style="--n-icon-margin: 18px 8px 0 12px;">
+        <n-alert v-if="!route.query?.token" title="" type="success" class="bg-neutral-07" style="--n-icon-margin: 18px 8px 0 12px; --n-border: 0">
             <template #icon>
                 <i class="i-custom-info"></i>
             </template>
-            A reset password email has been sent to <span class="text-1.375rem leading-title text-primary">{{ model.email }}</span>
+            <div class="text-neutral-04">
+                A reset password email has been sent to <span class="text-xl leading-title text-primary">{{ model.email }}</span>
+            </div>
         </n-alert>
         <i v-if="route.query?.token" class="inline-block text-3rem text-primary i-custom-check mb-12 "></i>
         <div v-if="route.query?.token" class="text-neutral-01 leading-title mt-7.5">Your password has been changed successfully.</div>
@@ -50,6 +52,8 @@
             size="large"
             class="mt-4"
             strong
+            :loading="pending"
+            :disabled="pending"
             @click="requestPassword"
         >Resend the email</n-button>
         <n-button
@@ -87,25 +91,36 @@ rules.value = {
             required: true,
             message: "Wrong email format!",
             // trigger: ['input', 'blur'],
-            validator: (rule, value) => isValidEmail(value),
+            validator: (rule, value) => value === null || isValidEmail(value),
         },
     ],
 };
 
 const api = useNAD()
 const message = useMessage()
-
+const notify = useNaiveNotification()
 
 async function requestPassword() {
     try {
-        const { data: requested, pending: sending } = await useAsyncData(() => api.request(
+        await api.request(
             passwordRequest(model.value?.email, '')
-        ))
-        message.success('Successfully!')
+        )
+        notify.create({
+            title: 'Successfully!',
+            type: 'success',
+            description: 'Password request sent!',
+            duration: 3000
+        })
         isSubmitted.value = true
     } catch (e) {
+        console.log(e)
         isSubmitted.value = false
-        message.error('Failed! Please try again.')
+        notify.create({
+            title: 'Failed!',
+            type: 'error',
+            description: `Please try again`,
+            duration: 3000
+        })
     }
 }
 
@@ -114,11 +129,23 @@ async function resetPassword() {
         const { data: reseted } = await useAsyncData(() => api.request(
             passwordReset(route.query?.token, model.value?.password)
         ))
-        message.success('Your password has been changed successfully.')
+        // message.success('Your password has been changed successfully.')
+        notify.create({
+            title: 'Successfully!',
+            type: 'success',
+            description: 'Your password has been changed successfully.',
+            duration: 3000
+        })
         isSubmitted.value = true
     } catch (e) {
         isSubmitted.value = false
-        message.error('Failed! Please try again.')
+        // message.error('Failed! Please try again.')
+        notify.create({
+            title: 'Failed!',
+            type: 'error',
+            description: `Please try again`,
+            duration: 3000
+        })
     }
 }
 
@@ -133,7 +160,7 @@ async function handleSubmit() {
 }
 
 useHead({
-    title: 'Forgot password - Beta - LinkWaveAI'
+    title: 'Forgot password - Beta - LinkWavePro'
 })
 </script>
 

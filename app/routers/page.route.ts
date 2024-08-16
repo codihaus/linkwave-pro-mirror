@@ -11,7 +11,7 @@ export default [
     },
     {
         name: "project-detail",
-        path: "/project/?:id",
+        path: "/project/:id",
         file: "/project/detail.vue",
     },
     {

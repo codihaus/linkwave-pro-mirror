@@ -58,6 +58,13 @@ html {
     margin-right: 8px;
 }
 
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--n-text-color);
+    -webkit-box-shadow: 0 0 0px 40rem var(--n-color) inset;
+}
+
 .n-select .n-base-selection{
     --n-height: 45px;
     --n-border: 1px solid #343839;

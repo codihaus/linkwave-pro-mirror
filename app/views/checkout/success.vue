@@ -32,7 +32,7 @@ definePageMeta({
 
 const samples = ref([
 	{
-		title: 'LinkWaveAI',
+		title: 'LinkWavePro',
 		// content: 'AI-powered Expert to answer the construction regulation & building codes',
 		content: 'Everything with AI-Powered chatbot',
 		icon: '/images/chat/chart.svg',

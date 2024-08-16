@@ -35,7 +35,7 @@ function onChangeTab(tab: string = 'login') {
 }
 
 useHead({
-    title: 'Login - Beta - LinkWaveAI'
+    title: 'Login - Beta - LinkWavePro'
 })
 </script>
 
