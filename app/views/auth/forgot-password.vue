@@ -45,17 +45,22 @@
         <div v-if="route.query?.token" class="text-neutral-01 leading-title mt-7.5">Your password has been changed successfully.</div>
         <!-- <div v-if="!route.query?.token" class="text-1.375rem leading-title text-primary">{{ model.email }}</div> -->
         <div v-if="!route.query?.token" class="text-neutral-04 leading-title mt-7">Please follow the instructions in the email</div>
-        <n-button
-            v-if="!route.query?.token"
-            type="primary"
-            block
-            size="large"
-            class="mt-4"
-            strong
-            :loading="pending"
-            :disabled="pending"
-            @click="requestPassword"
-        >Resend the email</n-button>
+        
+        <div v-if="!route.query?.token">
+            <n-button
+                type="primary"
+                block
+                size="large"
+                class="mt-4"
+                strong
+                :loading="pending"
+                :disabled="pending"
+                @click="requestPassword"
+            >Resend the email</n-button>
+            <div class="mt-4.5 text-center">
+                <nuxt-link to="/login" class="text-primary">Back to sign in</nuxt-link>
+            </div>
+        </div>
         <n-button
             v-else
             type="primary"
