@@ -2,11 +2,21 @@ export default [
     {
         name: "home",
         path: "/",
-        file: "/project/index.vue",
+        file: "/project/listing.vue",
     },
     {
         name: "project-listing",
-        path: "/project",
-        file: "/project/index.vue",
+        path: "/projects",
+        file: "/project/listing.vue",
+    },
+    {
+        name: "project-detail",
+        path: "/project/?:id",
+        file: "/project/detail.vue",
+    },
+    {
+        name: "project-ai-assistant",
+        path: "/project/:id/ai-assistant/",
+        file: "/project/ai-assistant.vue",
     },
 ]

@@ -44,18 +44,18 @@
                         <template v-if="!pending">
                             <div v-for="project in projects">
                                 <div v-if="gridView" class="relative">
-                                    <nuxt-link class="block relative aspect-r pb-1/1 bg-neutral-04 rounded">
+                                    <nuxt-link :to="getProjectRoute(project?.id)" class="block relative aspect-r pb-1/1 bg-neutral-04 rounded">
                                     </nuxt-link>
                                     <div class="px-2 pb-2.5 absolute bottom-0 left-0 right-0">
                                         <nuxt-link class="px-3 py-2 text-center font-semibold text-lg rounded-lg bg-neutral-07 bg-opacity-95 line-clamp-1">{{ project?.name }}</nuxt-link>
                                     </div>
-                                    <n-dropdown trigger="click" :options="actions" @select="selectAction">
+                                    <n-dropdown trigger="click" :options="actions" @select="selectAction($event, project?.id)">
                                         <n-button icon ghost text class="absolute top-0.5 right-0.5">
                                             <i class="i-custom-action text-2xl"></i>
                                         </n-button>
                                     </n-dropdown>
                                 </div>
-                                <nuxt-link v-else class="block md:flex gap-x-6 p-4 lg:p-6 rounded bg-neutral-07">
+                                <nuxt-link v-else :to="getProjectRoute(project?.id)" class="block md:flex gap-x-6 p-4 lg:p-6 rounded bg-neutral-07">
                                     <div class="md:w-32">
                                         <div class="block relative aspect-r pb-1/1 bg-neutral-04 rounded">
                                         </div>
@@ -75,7 +75,7 @@
                                                 <div>{{ project?.location }}</div>
                                             </div>
                                             <div>
-                                                <n-dropdown trigger="click" :options="actions" @select="selectAction">
+                                                <n-dropdown trigger="click" :options="actions" @select="selectAction($event, project?.id)">
                                                     <n-button icon ghost text class="text-neutral-03">
                                                         <i class="i-custom-action text-2xl"></i>
                                                     </n-button>
@@ -155,7 +155,8 @@ import { upperFirst, get } from 'lodash-es'
 
 
 definePageMeta({
-	auth: true
+	auth: true,
+    sidebarCollapsed: false
 })
 
 const currentUser = useState('currentUser')
@@ -170,7 +171,7 @@ const limit = ref(8)
 const { data: projects, pending, refresh } = await useAsyncData(
     'projects',
     () => api.request(readItems('projects', {
-        fields: ['name', 'logo', 'type', 'location.name', 'description'],
+        fields: ['id', 'name', 'logo', 'type', 'location.name', 'description'],
         // fields: ['*']
         filter: {
             _and: [
@@ -231,14 +232,25 @@ const actions = ref([
         label: 'Edit',
         key: 'edit'
     },
-    {
-        label: 'Delete',
-        key: 'delete'
-    },
+    // {
+    //     label: 'Delete',
+    //     key: 'delete'
+    // },
 ])
 
-function selectAction(key: string | number) {
-    
+function selectAction(key: string | number, id) {
+    if( key === 'edit' ) {
+        navigateTo(getProjectRoute(id))
+    }
+}
+
+function getProjectRoute(id) {
+    return {
+        name: 'project-detail',
+        params: {
+            id
+        }
+    }
 }
 </script>
 
