@@ -148,7 +148,7 @@
     <lazy-create-project v-model="showCreateProjectModal" @create="refresh"/>
 </template>
 <script setup lang="ts">
-import { readItems, aggregate } from '@directus/sdk'
+import { readItems, aggregate, deleteItem } from '@directus/sdk'
 import LazyCreateProject from './components/create-project.vue'
 import LazyRightSidebar from './components/right-sidebar.vue'
 import { upperFirst, get } from 'lodash-es'
@@ -160,8 +160,9 @@ definePageMeta({
 })
 
 const currentUser = useState('currentUser')
+const route = useRoute()
 
-const showCreateProjectModal = ref(false)
+const showCreateProjectModal = ref(route?.params?.id === '+')
 const gridView = ref(true)
 
 const api = useNAD()
@@ -181,9 +182,21 @@ const { data: projects, pending, refresh } = await useAsyncData(
                     },
                 },
                 {
-                    user_created: currentUser.value?.id   
+
+                    _or: [
+                        {
+                            user_created: currentUser.value?.id   
+                        },
+                        {
+                            project_members: {
+                                directus_users_id: {
+                                    _eq: currentUser.value?.id
+                                }
+                            }   
+                        },
+                    ]
                 }
-            ]
+            ],
         },
         sort: '-date_created',
         limit: limit.value,
@@ -195,7 +208,8 @@ const { data: projects, pending, refresh } = await useAsyncData(
             location: item?.location?.name || '',
             type: `${upperFirst(item?.type)} buildings`
         })),
-        watch: [page]
+        watch: [page],
+        default: () => new Array(8).fill('')
     }
 )
 
@@ -209,7 +223,18 @@ const { data: totalPage } = await useAsyncData(() => api.request(aggregate('proj
                     },
                 },
                 {
-                    user_created: currentUser.value?.id   
+                    _or: [
+                        {
+                            user_created: currentUser.value?.id   
+                        },
+                        {
+                            project_members: {
+                                directus_users_id: {
+                                    _eq: currentUser.value?.id
+                                }
+                            }   
+                        },
+                    ]
                 }
             ]
         },
@@ -232,15 +257,18 @@ const actions = ref([
         label: 'Edit',
         key: 'edit'
     },
-    // {
-    //     label: 'Delete',
-    //     key: 'delete'
-    // },
+    {
+        label: 'Delete',
+        key: 'delete'
+    },
 ])
 
-function selectAction(key: string | number, id) {
+async function selectAction(key: string | number, id) {
     if( key === 'edit' ) {
         navigateTo(getProjectRoute(id))
+    }
+    if( key === 'delete' ) {
+        await deleteProject(id)
     }
 }
 
@@ -250,6 +278,35 @@ function getProjectRoute(id) {
         params: {
             id
         }
+    }
+}
+
+
+const deleting = ref(false)
+const notify = useNaiveNotification()
+
+async function deleteProject(id) {
+    deleting.value = true
+    try {
+        await api.request(
+            deleteItem("projects", id)
+        )
+        notify.create({
+            title: 'Successfully!',
+            type: 'success',
+            description: 'Project has been deleted successfully!',
+            duration: 3000
+        })
+        refresh()
+    } catch (error) {
+        notify.create({
+            title: 'Failed!',
+            type: 'error',
+            description: `Please try again`,
+            duration: 3000
+        })
+    } finally {
+        deleting.value = false
     }
 }
 </script>
