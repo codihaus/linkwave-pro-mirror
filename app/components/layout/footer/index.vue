@@ -3,7 +3,7 @@
         <div class="container">
             <div id="footer-content"></div>
             <div class="py-2.5 text-center lg:flex justify-center items-center gap-3 text-content-02 text-sm lg:text-base leading-relaxed">
-                <div>Copyright 2024 © LinkWaveAI. All Rights Reserved</div>
+                <div>Copyright 2024 © LinkWavePro. All Rights Reserved</div>
                 <div class="text-hex-CCD7EA underline cursor-pointer hover:text-primary" @click="showTermPolicy">Terms of Service & Privacy policy</div>
             </div>
         </div>

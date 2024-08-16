@@ -9,10 +9,10 @@ export default defineEventHandler(async (event) => {
 
     console.log('register payload:', body)
 
-    const result = await client?.request(createUser({...body})).catch((e: any) => {
+    const result = await client?.request(createUser({...body})).catch((error: any) => {
         throw createError({
             statusCode: 401,
-            statusMessage: 'Failed!',
+            statusMessage: error?.errors?.[0].extensions.code ?? 'Failed',
         })
     })
 
