@@ -57,7 +57,7 @@
                     <n-input v-model:value="model.retype_password" size="large" type="password" placeholder="Re-type password"></n-input>
                 </n-form-item>
                 <n-form-item :show-label="false" path="allow_term">
-                    <n-checkbox v-model:checked="model.allow_term" class="text-neutral-04">I consent to receive marketing communications such as emails and SMS from LinkwaveAI as well as to its Terms of Service and Privacy Policy.</n-checkbox>
+                    <n-checkbox v-model:checked="model.allow_term" class="text-neutral-04">I consent to receive marketing communications such as emails and SMS from LinkWavePro as well as to its Terms of Service and Privacy Policy.</n-checkbox>
                 </n-form-item>
                 <n-button
                     block
@@ -77,8 +77,8 @@
         </n-tab-pane>
     </n-tabs>
     <div v-if="success" class="mt-6">
-        <div class="inline-block bg-primary rounded-full p-10 leading-0">
-            <i class="inline-block text-3rem text-neutral-07 i-custom-check"></i>
+        <div class="inline-block bg-primary rounded-full p-4 leading-0">
+            <i class="inline-block text-3xl text-neutral-07 i-custom-check"></i>
         </div>
         <div class="text-heading leading-title mt-7.5 text-lg lg:text-2xl font-bold">Your account has been created successfully!</div>
         <n-button
@@ -146,8 +146,8 @@ rules.value = {
             validator: (rule, value) => isValidEmail(value),
         },
         {
-            message: "Wrong credentials",
-            validator: () => !apiErrors.value.wrongCredentials,
+            message: "This email is already registered!",
+            validator: () => !apiErrors.value.emailExists,
         },
     ],
     password: [
@@ -192,17 +192,26 @@ async function handleSubmit() {
 
     const response = await nuxtApiAuth.register(credentials).then(() => {
         success.value = true
-    }).catch(() => {
+    }).catch((e) => {
+        console.log('e', e.errors?.statusMessage)
+        let message = `Please try again!`
+
+        if( e.errors?.statusMessage === "RECORD_NOT_UNIQUE" ) {
+            apiErrors.value.emailExists = true
+            message = `This email is already registered! ${message}`
+        }
         notify.create({
-            title: 'Error',
+            title: 'Register failed!',
             type: 'error',
-            description: 'Please try again!'
+            description: message,
+            duration: 3000
         })
     })
+    console.log('response', response)
 }
 
 useHead({
-    title: 'Register - Beta - LinkWaveAI'
+    title: 'Register - Beta - LinkWavePro'
 })
 </script>
 

@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
 
     const result = await client.request(
         readMe({
-            fields: ["*", 'current_plan.plan']
+            fields: ["*", 'current_plan.plan', 'email']
         })
     ).then((response) => {
 

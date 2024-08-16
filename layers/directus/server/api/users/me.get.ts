@@ -5,6 +5,7 @@ import { Logger } from '@directusLayer/utils/logger.util'
 
 export default defineEventHandler(async (event) => {
     const query = getQuery(event)
+    console.log('query', query)
     const apiUser = event.context.api_client
-    return apiUser.request(readMe(query as never)).catch((e: any) => handleErrorsDirectus(e, ErrorReadMeFailed))
+    return await apiUser.request(readMe(query as never)).catch((e: any) => handleErrorsDirectus(e, ErrorReadMeFailed))
 });

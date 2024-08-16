@@ -34,7 +34,7 @@
             <div class="py-6">
                 <nuxt-link v-for="item in mainNavigation" :to="item?.to" class="menu-item px-5 py-3 flex items-center gap-5 rounded hover:text-primary" :active-class="item?.to?.startsWith('#') ? '' : 'active'">
                     <i class="text-2xl leading-0" :class="item?.icon"></i>
-                    {{ item?.label }}
+                    <span v-if="!sidebarCollapsed && greaterThanLg">{{ item?.label }}</span>
                 </nuxt-link>
             </div>
             <n-scrollbar class="h-[calc(100dvh-346px)] leading-title p-4 border-t border-neutral-06">
@@ -69,9 +69,18 @@
 
 <script setup lang="ts">
 import { readItems } from '@directus/sdk';
+import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
+
+const breakpoints = useBreakpoints(breakpointsTailwind)
+// const greaterThanMd = breakpoints.greater('md')
+const smallerThanLg = breakpoints.smaller('lg')
+const greaterThanLg = breakpoints.greaterOrEqual('lg')
+
+const route = useRoute()
+
 
 const currentUser = useState('currentUser')
-const sidebarCollapsed = useState('sidebarCollapsed', () => false)
+const sidebarCollapsed = useState('sidebarCollapsed', () => route.meta.sidebarCollapsed)
 
 const mainNavigation = ref([
     {
@@ -140,14 +149,16 @@ function createNewThread() {
 }
 
 function closeSidebarOnMobile() {
-    if( width.value < 1024 ) {
+    if( smallerThanLg.value ) {
         sidebarCollapsed.value = true
-        console.log('sidebarCollapsed', sidebarCollapsed.value)
     }
 }
 
-onMounted(() => {
+watch([smallerThanLg, greaterThanLg], () => {
     closeSidebarOnMobile()
+    if( greaterThanLg.value ) {
+        sidebarCollapsed.value = false
+    }
 })
 </script>
 
