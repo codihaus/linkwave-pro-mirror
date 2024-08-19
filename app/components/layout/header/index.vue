@@ -10,7 +10,7 @@
         <div class="lg:w-2/12">
             <nuxt-link to="/"><layout-logo/></nuxt-link>
         </div>
-        <div class="lg:w-4/10">
+        <div class="lg:w-4/10 lg:mx-auto">
             <n-input
                 v-model:value="searchInput"
                 type="text"
@@ -52,7 +52,8 @@ import { LayoutHeaderProfileMenu } from '#components'
 const route = useRoute()
 
 const currentUser = useState("currentUser")
-const avatar = computed(() => currentUser.value?.avatar ? useCMSUrl(`assets/${currentUser.value?.avatar}`) : null)
+const { getCMSUrl } = useCMSUrl()
+const avatar = computed(() => currentUser.value?.avatar ? getCMSUrl(`assets/${currentUser.value?.avatar}`) : null)
 
 const menu = ref([
     {
@@ -102,7 +103,7 @@ function onCollapse() {
     sidebarCollapsed.value = !sidebarCollapsed.value
 }
 
-const searchInput = ref()
+const searchInput = useState('searchInput')
 
 </script>
 <style lang="scss">
