@@ -90,9 +90,14 @@
                                     </div>
                                 </nuxt-link>
                             </div>
+                            <template v-if="projects?.length < limit">
+                                <div v-for="pr in new Array(limit - projects?.length).fill('1')">
+                                    <div class="block relative aspect-r pb-1/1"></div>
+                                </div>
+                            </template>
                         </template>
                         <template v-else>
-                            <div v-for="project in new Array(8).fill('')">
+                            <div v-for="project in new Array(limit).fill('')">
                                 <div v-if="gridView" class="relative">
                                     <div class="block relative aspect-r pb-1/1 rounded bg-neutral-04">
                                         <n-skeleton text :sharp="false"/>
