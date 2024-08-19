@@ -138,7 +138,7 @@
                                         <i class="i-custom-upload-2 text-2xl text-primary"></i>
                                     </div>
                                 </div>
-                                <div class="text-lg font-semibold leading-2rem text-neutral-01">
+                                <div class="font-medium leading-2rem text-neutral-01">
                                     Click or Drag & Drop your Floor Plan files here to upload
                                 </div>
                                 <div class="leading-relaxed text-neutral-01 text-opacity-20">
