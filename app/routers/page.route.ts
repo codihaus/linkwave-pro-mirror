@@ -6,7 +6,7 @@ export default [
     },
     {
         name: "project-listing",
-        path: "/projects",
+        path: "/projects/:id?",
         file: "/project/listing.vue",
     },
     {
