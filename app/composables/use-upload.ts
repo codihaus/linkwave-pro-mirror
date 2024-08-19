@@ -17,7 +17,7 @@ export async function useUpload(uploadField: Ref, options: any = {
 
     const chunkSize = options?.chunkSize || 1024 * 1024
 
-    const maxSizeUpload = computed(() => quota.value?.current_plan?.max_size_upload * chunkSize)
+    const maxSizeUpload = computed(() => (options?.max_size_upload || quota.value?.current_plan?.max_size_upload) * chunkSize)
     
     function removeFile(file) {
         files.value = files.value?.filter(({id}) => id !== file?.id)
