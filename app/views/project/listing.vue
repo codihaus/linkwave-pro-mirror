@@ -45,10 +45,11 @@
                         <template v-if="!pending">
                             <div v-for="project in projects">
                                 <div v-if="gridView" class="relative">
-                                    <nuxt-link :to="getProjectRoute(project?.id)" class="block relative aspect-r pb-1/1 bg-neutral-04 rounded">
+                                    <nuxt-link :to="getProjectRoute(project?.id)" class="block relative aspect-r pb-1/1 rounded" :class="{'bg-neutral-04': !project?.logo}">
+                                        <img v-if="project?.logo" :src="project?.logo">
                                     </nuxt-link>
                                     <div class="px-2 pb-2.5 absolute bottom-0 left-0 right-0">
-                                        <nuxt-link class="px-3 py-2 text-center font-semibold text-lg rounded-lg bg-neutral-07 bg-opacity-95 line-clamp-1">{{ project?.name }}</nuxt-link>
+                                        <nuxt-link :to="getProjectRoute(project?.id)" class="px-3 py-2 text-center font-semibold text-lg rounded-lg bg-neutral-07 bg-opacity-95 line-clamp-1" :title="project?.name">{{ project?.name }}</nuxt-link>
                                     </div>
                                     <n-dropdown trigger="click" :options="actions" @select="selectAction($event, project?.id)">
                                         <n-button icon ghost text class="absolute top-0.5 right-0.5">
@@ -58,7 +59,8 @@
                                 </div>
                                 <nuxt-link v-else :to="getProjectRoute(project?.id)" class="block md:flex gap-x-6 p-4 lg:p-6 rounded bg-neutral-07">
                                     <div class="md:w-32">
-                                        <div class="block relative aspect-r pb-1/1 bg-neutral-04 rounded">
+                                        <div class="block relative aspect-r pb-1/1 rounded" :class="{'bg-neutral-04': !project?.logo}">
+                                            <img v-if="project?.logo" :src="project?.logo">
                                         </div>
                                     </div>
                                     <div class="flex-grow">
@@ -166,9 +168,12 @@ definePageMeta({
 
 const currentUser = useState('currentUser')
 const route = useRoute()
+const { getCMSUrl } = useCMSUrl()
 
 const showCreateProjectModal = ref(route?.params?.id === '+')
 const gridView = ref(true)
+
+const searchInput = useState('searchInput')
 
 const api = useNAD()
 
@@ -178,7 +183,8 @@ const { data: projects, pending, refresh: refreshProjects } = await useAsyncData
     'projects',
     () => api.request(readItems('projects', {
         fields: ['id', 'name', 'logo', 'type', 'location.name', 'description'],
-        // fields: ['*']
+        // fields: ['*'],
+        search: searchInput.value || null,
         filter: {
             _and: [
                 {
@@ -210,16 +216,18 @@ const { data: projects, pending, refresh: refreshProjects } = await useAsyncData
     {
         transform: (response) => response?.items?.map((item) => ({
             ...item,
+            logo: item?.logo ? getCMSUrl(`assets/${item?.logo}`) : null,
             location: item?.location?.name || '',
             type: `${upperFirst(item?.type)} buildings`
         })),
-        watch: [page],
+        watch: [page, searchInput],
         default: () => new Array(8).fill('')
     }
 )
 
 const { data: totalPage, refresh: refreshTotalPage } = await useAsyncData(() => api.request(aggregate('projects', {
     query: {
+        search: searchInput.value || null,
         filter: {
             _and: [
                 {
@@ -253,7 +261,8 @@ const { data: totalPage, refresh: refreshTotalPage } = await useAsyncData(() => 
         response = response?.items
         let totalItems = Number(get(response, '0.countDistinct.id'))
         return Math.ceil(totalItems / limit.value) || 1
-    }
+    },
+    watch: [searchInput]
 } )
 
 function refresh() {
