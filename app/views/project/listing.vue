@@ -5,14 +5,10 @@
                 <i class="i-custom-plus text-2xl leading-0"></i>
             </n-button>
         </template>
-        <template #right-sidebar>
-            <lazy-right-sidebar />
-        </template>
-
         <div class="container">
             <div class="bg-hex-1A1D1E">
 
-                <div class="py-3 px-4 lg:px-8 flex justify-between gap-3 border-b border-neutral-05">
+                <div class="py-3 xpx-4 lg:xpx-8 flex justify-between gap-3 border-b border-neutral-05">
                     <div class="font-semibold text-2xl leading-40px text-neutral-01">Projects</div>
                     <div class="flex gap-3">
                         <n-button icon text :class="{'text-primary': gridView}" @click="gridView = true">
@@ -39,8 +35,8 @@
                         </n-button>
                     </template>
                 </n-result>
-                <div v-else class="px-4 py-5 lg:px-8 lg:py-8">
-                    <div class="grid grid-cols-1 gap-8 text-white leading-1.5rem" :class="gridView ? 'md:grid-cols-2 lg:grid-cols-4' : ''">
+                <div v-else class="py-5 xpx-4 lg:xpx-8 lg:py-8">
+                    <div class="min-h grid grid-cols-1 gap-10 xxl:gap-12 text-white leading-1.5rem" :class="gridView ? 'md:grid-cols-2 lg:grid-cols-4' : ''">
                         <template v-if="!pending">
                             <div v-for="project in projects">
                                 <div v-if="gridView" class="relative">
@@ -150,7 +146,6 @@
 <script setup lang="ts">
 import { readItems, aggregate, deleteItem } from '@directus/sdk'
 import LazyCreateProject from './components/create-project.vue'
-import LazyRightSidebar from './components/right-sidebar.vue'
 import { upperFirst, get } from 'lodash-es'
 
 
