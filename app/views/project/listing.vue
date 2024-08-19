@@ -1,9 +1,14 @@
 <template>
     <layout-view>
         <template #header-right>
-            <n-button type="primary" icon class="px-2" style="--n-height: 40px;" @click="showCreateProjectModal=true">
-                <i class="i-custom-plus text-2xl leading-0"></i>
-            </n-button>
+            <n-popover trigger="hover">
+                <template #trigger>
+                    <n-button type="primary" icon class="px-2" style="--n-height: 40px;" @click="showCreateProjectModal=true">
+                        <i class="i-custom-add text-2xl leading-0"></i>
+                    </n-button>
+                </template>
+                <span>Create project</span>
+            </n-popover>
         </template>
         <div class="container">
             <div class="bg-hex-1A1D1E">
@@ -30,7 +35,7 @@
                     </template>
                     <template #footer>
                         <n-button type="primary" class="px-6" style="--n-height: 40px;" @click="showCreateProjectModal=true">
-                            <i class="i-custom-plus text-2xl leading-0"></i>
+                            <i class="i-custom-add text-2xl leading-0 mr-2"></i>
                             New Project
                         </n-button>
                     </template>
