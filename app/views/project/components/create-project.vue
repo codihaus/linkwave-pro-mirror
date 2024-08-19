@@ -75,6 +75,20 @@
                         <n-form-item :show-label="false" label="Contractor's name" path="contractor_name">
                             <n-input v-model:value="project.contractor_name" size="large" placeholder="Contractor's name"></n-input>
                         </n-form-item>
+                        <n-form-item label="Project's Thumbnail" path="logo">
+                            <n-upload
+                                ref="thumbnailField"
+                                action=""
+                                :max="1"
+                                accept="image/*"
+                                list-type="image-card"
+                                :custom-request="uploadThumbnail"
+                                @change="onThumbnailChange"
+                                @before-upload="beforeUploadThumbnail"
+                            >
+                                Click to Upload
+                            </n-upload>
+                        </n-form-item>
                         <n-form-item :show-label="false" label="" path="share">
                             <div class="w-full flex gap-3 px-4 py-3 justify-between border border-neutral-05 rounded">
                                 <div class="text-neutral-02">Share with team</div>
@@ -185,6 +199,7 @@
 
 <script setup lang="ts">
 import { readItems, aggregate, createItem, customEndpoint, inviteUser } from '@directus/sdk'
+import { get } from 'lodash-es';
 
 const showModal = defineModel('modelValue', {
     type: Boolean,
@@ -204,6 +219,7 @@ const project = ref({
     location: null,
     type: 'residential',
     description: null,
+    logo: null,
     share: null,
     project_members: null,
 });
@@ -361,6 +377,20 @@ const {
     resetUploadField
 } = await useUpload(useState<HTMLDivElement>('uploadField'))
 
+const {
+    uploadField: thumbnailField,
+    attachments: thumbnailAttachments,
+    beforeUpload: beforeUploadThumbnail,
+    onFileChange: onThumbnailChange,
+    upload: uploadThumbnail,
+    uploading: uploadingThumbnail,
+    files: thumbnailFiles,
+    removeFile: removeThumbnail,
+    retryFile: retryThumbnail,
+    getFileStatus: getThumbnailStatus,
+    resetUploadField: resetUploadThumbnail
+} = await useUpload(ref<HTMLDivElement>('thumbnailField'))
+
 async function handleSubmit() {
     let data = {...project.value}
     delete data.country
@@ -376,6 +406,10 @@ async function handleSubmit() {
             update: [],
             delete: [],
         }
+    }
+
+    if( thumbnailFiles.value?.length ) {
+        data.logo = get(thumbnailFiles.value, '0.file_id')
     }
 
     try {
