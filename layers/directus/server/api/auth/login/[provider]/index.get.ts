@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
     // AUTH_PROVIDERS
     // SSO_ALLOW_REDIRECT
 
-    const urlCallback = `${runtimeConfig.public.url}/api/auth/login/${provider}/callback?fw=${fw}`
+    const urlCallback = encodeURIComponent(`${runtimeConfig.public.url}/api/auth/login/${provider}/callback?fw=${fw}`)
 
     const redirect = `${BACKEND_URL}/sso/login/callback?fw=${urlCallback}`
 
