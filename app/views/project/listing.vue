@@ -184,7 +184,7 @@ const { data: projects, pending, refresh: refreshProjects } = await useAsyncData
     () => api.request(readItems('projects', {
         fields: ['id', 'name', 'logo', 'type', 'location.name', 'description'],
         // fields: ['*'],
-        search: searchInput.value || null,
+        search: searchInput.value || '',
         filter: {
             _and: [
                 {
@@ -227,7 +227,7 @@ const { data: projects, pending, refresh: refreshProjects } = await useAsyncData
 
 const { data: totalPage, refresh: refreshTotalPage } = await useAsyncData(() => api.request(aggregate('projects', {
     query: {
-        search: searchInput.value || null,
+        search: searchInput.value || '',
         filter: {
             _and: [
                 {
