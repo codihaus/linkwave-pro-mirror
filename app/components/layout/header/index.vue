@@ -8,7 +8,7 @@
             </n-button>
         </div>
         <div class="lg:w-2/12">
-            <layout-logo dark/>
+            <nuxt-link to="/"><layout-logo/></nuxt-link>
         </div>
         <div class="lg:w-4/10">
             <n-input
