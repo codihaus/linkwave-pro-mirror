@@ -91,7 +91,7 @@
                                 </nuxt-link>
                             </div>
                             <template v-if="projects?.length < limit">
-                                <div v-for="pr in new Array(limit - projects?.length).fill('1')">
+                                <div v-for="pr in new Array(limit - projects?.length).fill('1')" class="hidden lg:block">
                                     <div class="block relative aspect-r pb-1/1"></div>
                                 </div>
                             </template>
@@ -174,7 +174,7 @@ const api = useNAD()
 
 const page = ref(1)
 const limit = ref(8)
-const { data: projects, pending, refresh } = await useAsyncData(
+const { data: projects, pending, refresh: refreshProjects } = await useAsyncData(
     'projects',
     () => api.request(readItems('projects', {
         fields: ['id', 'name', 'logo', 'type', 'location.name', 'description'],
@@ -218,7 +218,7 @@ const { data: projects, pending, refresh } = await useAsyncData(
     }
 )
 
-const { data: totalPage } = await useAsyncData(() => api.request(aggregate('projects', {
+const { data: totalPage, refresh: refreshTotalPage } = await useAsyncData(() => api.request(aggregate('projects', {
     query: {
         filter: {
             _and: [
@@ -256,6 +256,10 @@ const { data: totalPage } = await useAsyncData(() => api.request(aggregate('proj
     }
 } )
 
+function refresh() {
+    refreshProjects()
+    refreshTotalPage()
+}
 
 const actions = ref([
     {
