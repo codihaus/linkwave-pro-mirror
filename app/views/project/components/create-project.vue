@@ -264,10 +264,13 @@ const { data: countryOptions } = await useAsyncData(
             label: 'Select country',
             value: null
         } */]),
-        transform: (response) => response?.items?.map(({id, name}) => ({
-            label: name,
-            value: id
-        })),
+        transform: (response) => {
+            console.log('response')
+            return response?.items?.map(({id, name}) => ({
+                label: name,
+                value: id
+            }))
+        },
     }
 )
 
@@ -359,7 +362,7 @@ const {
 } = await useUpload(useState<HTMLDivElement>('uploadField'))
 
 async function handleSubmit() {
-    let data = project.value
+    let data = {...project.value}
     delete data.country
     delete data.share
 
