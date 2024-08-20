@@ -46,7 +46,7 @@
                             <div v-for="project in projects">
                                 <div v-if="gridView" class="relative">
                                     <nuxt-link :to="getProjectRoute(project?.id)" class="block relative aspect-r pb-1/1 rounded" :class="{'bg-neutral-04': !project?.logo}">
-                                        <img v-if="project?.logo" :src="project?.logo">
+                                        <img v-if="project?.logo" :src="project?.logo" class="object-cover">
                                     </nuxt-link>
                                     <div class="px-2 pb-2.5 absolute bottom-0 left-0 right-0">
                                         <nuxt-link :to="getProjectRoute(project?.id)" class="px-3 py-2 text-center font-semibold text-lg rounded-lg bg-neutral-07 bg-opacity-95 line-clamp-1" :title="project?.name">{{ project?.name }}</nuxt-link>
@@ -60,7 +60,7 @@
                                 <nuxt-link v-else :to="getProjectRoute(project?.id)" class="block md:flex gap-x-6 p-4 lg:p-6 rounded bg-neutral-07">
                                     <div class="md:w-32">
                                         <div class="block relative aspect-r pb-1/1 rounded" :class="{'bg-neutral-04': !project?.logo}">
-                                            <img v-if="project?.logo" :src="project?.logo">
+                                            <img v-if="project?.logo" :src="project?.logo" class="object-cover">
                                         </div>
                                     </div>
                                     <div class="flex-grow">
