@@ -105,7 +105,13 @@
                                 :loading="loadingUser"
                                 clearable
                                 tag
-                            />
+                            >
+                                <template #empty>
+                                    <div class="text-neutral-03">
+                                        Fill email and press enter to invite member to project
+                                    </div>
+                                </template>
+                            </n-select>
                         </n-form-item>
                         <div v-if="project.share" class="text-neutral-04">
                             Fill email and press enter to invite member to project
