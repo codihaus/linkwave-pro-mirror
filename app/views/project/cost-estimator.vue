@@ -16,14 +16,24 @@
                 <div class="font-semibold text-2xl leading-40px text-neutral-01">Cost Estimator</div>
             </div>
             <div class="px-4 py-6 lg:px-8 lg:py-8">
+                <div class="text-lg mb-4 text-neutral-01">Files</div>
                 <n-data-table
                     remote
                     ref="table"
                     :columns="columns"
                     :data="data"
-                    :loading="pending"
-                    :row-key="rowKey"
+                    :bordered="false"
+                    style="
+                        --n-th-color: transparent;
+                        --n-td-color: transparent;
+                        --n-border-color: #2E3133;
+                        --n-th-text-color: #E8ECEF;
+                        --n-td-text-color: #F0F5FB;
+                        --n-td-color-hover: #444;
+                    "
                 />
+                    <!-- :loading="pending"
+                    :row-key="rowKey" -->
             </div>
         </div>
 
