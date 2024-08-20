@@ -16,7 +16,12 @@ export default [
     },
     {
         name: "project-ai-assistant",
-        path: "/project/:id/ai-assistant/",
+        path: "/project/:id/ai-assistant",
         file: "/project/ai-assistant.vue",
+    },
+    {
+        name: "project-cost-estimator",
+        path: "/project/:id/cost-estimator",
+        file: "/project/cost-estimator.vue",
     },
 ]
