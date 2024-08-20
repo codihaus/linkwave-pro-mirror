@@ -292,7 +292,7 @@ async function selectAction(key: string | number, id) {
 
 function getProjectRoute(id) {
     return {
-        name: 'project-detail',
+        name: 'project-cost-estimator',
         params: {
             id
         }
