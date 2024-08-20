@@ -6,11 +6,21 @@
                     <i class="i-custom-close text-2xl leading-0"></i>
                 </n-button>
             </div>
-            <div class="flex items-center justify-between gap-3 p-5 lg:px-6 border-b border-neutral-09">
-                <div class="text-lg text-neutral-01">Create Project</div>
-                <div>
+            <div class="flex flex-wrap items-center justify-between gap-3 p-5 lg:px-6 border-b border-neutral-09">
+                <div class="w-full lg:w-auto text-lg text-neutral-01">Create Project</div>
+                <div class="flex items-center gap-2">
                     <n-button
-                        block
+                        ghost
+                        type="primary"
+                        :loading="pending"
+                        :disabled="pending || uploading"
+                        size="large"
+                        @click="reset"
+                        >
+                        <i class="i-custom-retry mr-2"></i>
+                        Reset
+                    </n-button>
+                    <n-button
                         strong
                         type="primary"
                         :loading="pending"
@@ -45,7 +55,13 @@
                                     :options="countryOptions"
                                     size="large"
                                     filterable
-                                />
+                                >
+                                    <template #empty>
+                                        <div class="text-neutral-03">
+                                            No country found!
+                                        </div>
+                                    </template>
+                                </n-select>
                             </n-form-item>
                             <n-form-item :show-label="false" path="location" label="State">
                                 <n-select
@@ -54,7 +70,13 @@
                                     :options="stateOptions"
                                     size="large"
                                     filterable
-                                />
+                                >
+                                    <template #empty>
+                                        <div class="text-neutral-03">
+                                            {{ ! project?.country ? 'Please select Country first!' : 'No state found!' }}
+                                        </div>
+                                    </template>
+                                </n-select>
                             </n-form-item>
                         </div>
                         <n-form-item :show-label="false" label="Address" path="address">
