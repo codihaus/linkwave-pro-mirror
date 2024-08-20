@@ -15,7 +15,7 @@
                 v-model:value="searchInput"
                 type="text"
                 round
-                placeholder="Enter the name of your project"
+                placeholder="Search project by name, address, scope,...etc..."
                 style="--n-border: 1px solid rgba(35, 38, 39, 0.90)"
             >
                 <template #prefix>
