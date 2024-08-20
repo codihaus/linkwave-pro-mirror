@@ -7,7 +7,7 @@
         </layout-header>
         <n-layout has-sider class="content-box">
             <layout-sidebar />
-            <div v-if="$slots?.['sub-navigation']" class="w-62 h-full py-6 absolute z-99 top-0 bg-dark-05 lg:bg-transparent" :class="sidebarCollapsed ? 'top-0' : ''">
+            <div v-if="$slots?.['sub-navigation']" class="w-62 h-full py-6 absolute z-99 top-0 bg-dark-05 lg:relative lg:bg-transparent" :class="sidebarCollapsed ? 'top-0' : ''">
                 <div class="h-full bg-dark-05 rounded-tl-xl rounded-bl-xl">
                     <slot name="sub-navigation"></slot>
                 </div>
