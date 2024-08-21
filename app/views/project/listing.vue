@@ -192,21 +192,6 @@ const { data: projects, pending, refresh: refreshProjects } = await useAsyncData
                         _eq: 'published'
                     },
                 },
-                {
-
-                    _or: [
-                        {
-                            user_created: currentUser.value?.id   
-                        },
-                        {
-                            project_members: {
-                                directus_users_id: {
-                                    _eq: currentUser.value?.id
-                                }
-                            }   
-                        },
-                    ]
-                }
             ],
         },
         sort: '-date_created',
@@ -235,20 +220,6 @@ const { data: totalPage, refresh: refreshTotalPage } = await useAsyncData(() => 
                         _eq: 'published'
                     },
                 },
-                {
-                    _or: [
-                        {
-                            user_created: currentUser.value?.id   
-                        },
-                        {
-                            project_members: {
-                                directus_users_id: {
-                                    _eq: currentUser.value?.id
-                                }
-                            }   
-                        },
-                    ]
-                }
             ]
         },
         sort: '-date_created',

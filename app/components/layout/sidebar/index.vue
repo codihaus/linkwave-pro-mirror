@@ -8,7 +8,7 @@
         content-class="sidebar !overflow-hidden"
         @update:collapsed="sidebarCollapsed = $event"
         class="first-step-1 lt-lg:absolute z-99 sidebar lt-lg:transform lt-lg:transition-transform lt-lg:duration-350"
-        :class="{'lt-lg:-translate-x-full': sidebarCollapsed}"
+        :class="{'lt-lg:-translate-x-full': sidebarCollapsed, 'lg:hidden': route.meta?.hideSidebar}"
         >
         <div class="hidden p-5.5 bg-black leading-0">
             <n-button text @click="sidebarCollapsed=!sidebarCollapsed">
