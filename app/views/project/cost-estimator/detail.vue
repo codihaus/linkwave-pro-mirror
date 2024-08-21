@@ -77,6 +77,19 @@
                             <td>Đào đất làm đường ống nước và foundation</td>
                             <td>Gói</td>
                             <td>1</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Dọn Dẹp Rác</td>
+                            <td>Dọn dẹp rác thải xây dựng</td>
+                            <td>Lần</td>
+                            <td>4</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
                         </tr>
                     </tbody>
                 </n-table>
