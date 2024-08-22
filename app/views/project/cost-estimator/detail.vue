@@ -55,7 +55,6 @@
                 <n-data-table
                     :columns="columns"
                     :data="rows"
-                    :row-key="(row) => row.expand"
                     default-expand-all
                     :single-line="false"
                     style="
@@ -183,6 +182,10 @@ const columns = [
             }
 
             return colSpan
+        },
+        render: (rowData, rowIndex) => {
+            if( rowData?.type === 'item'  ) {}
+            return rowData?.name
         }
     },
     {
@@ -242,7 +245,6 @@ const api = useNAD()
 
 const { data: groups, pending, refresh } = await useAsyncData(
     () => api.request(readItems('estimator_group', {
-        fields: [ 'status', 'name', 'description' ],
         limit: -1
     })),
     {
@@ -253,7 +255,7 @@ const { data: groups, pending, refresh } = await useAsyncData(
                 type: 'group',
                 expand: true,
                 children: []
-            }))
+            })).filter((item) => item?.cost_estimator?.length)
         },
     }
 )
@@ -280,11 +282,13 @@ const { data: items } = await useAsyncData(
 
 const rows = computed(() => groups.value?.map((group) => ({
     ...group,
-    children: items.value?.filter((item) => item?.group === group?.name)
+    children: items.value?.filter((item) => item?.group === group?.name)?.map((item, index) => ({...item, index}))
 }) ))
 
 </script>
 
 <style lang="scss">
-
+[data-col-key="no"][style^="--indent-offset: 2"] {
+    border-bottom-color: transparent !important;
+}
 </style>
