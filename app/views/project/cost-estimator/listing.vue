@@ -147,11 +147,13 @@ const { data, pending, refresh } = await useAsyncData(
                         units: ["B", "KB", "MB", "GB", "TB"],
                     })
                 }
-            }))
+            })) || []
         },
         watch: [page]
     }
 )
+
+console.log('data', data.value)
 
 // const data = ref([
 //     {
