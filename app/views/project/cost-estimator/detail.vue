@@ -52,7 +52,23 @@
                 </div>
             </div>
             <div class="">
-                <n-table
+                <n-data-table
+                    :columns="columns"
+                    :data="rows"
+                    :row-key="(row) => row.expand"
+                    default-expand-all
+                    :single-line="false"
+                    style="
+                        --n-th-color: #14E3AE;
+                        --n-td-color: transparent;
+                        --n-border-color: #2E3133;
+                        --n-th-text-color: #100F0F;
+                        --n-td-text-color: #F0F5FB;
+                        --n-td-color-hover: #444;
+                        --n-td-padding: 16px;
+                    "
+                />
+                <!-- <n-table
                     :bordered="false"
                     :single-line="false"
                     style="
@@ -71,6 +87,11 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <tr v-for="group, index in groups">
+                            <td colspan="6">{{ group?.name }}</td>
+                            <td>123</td>
+                            <td></td>
+                        </tr>
                         <tr>
                             <td>1</td>
                             <td>Chuẩn Bị</td>
@@ -92,7 +113,7 @@
                             <td></td>
                         </tr>
                     </tbody>
-                </n-table>
+                </n-table> -->
                 <!-- <n-data-table
                     remote
                     ref="table"
@@ -122,6 +143,7 @@ import LazyRightSidebar from '../components/right-sidebar.vue'
 import SubNavigation from '../components/sub-navigation.vue'
 import { NTag } from 'naive-ui';
 import millify from 'millify'
+import { arrayToTree } from 'performant-array-to-tree';
 
 definePageMeta({
 	auth: true,
@@ -144,37 +166,58 @@ const { data: project } = await useProject()
 
 const columns = [
     {
-        title: 'No',
+        title: '',
         key: 'no',
         // width: '30%',
+        render: (rowData, rowIndex) => {
+            console.log('')
+        },
     },
     {
         title: 'Items group',
-        key: 'cost',
+        key: 'name',
+        colSpan: (rowData, rowIndex) => {
+            let colSpan = 1
+            if(rowData?.type === 'group') {
+                colSpan = 6
+            }
+
+            return colSpan
+        }
     },
     {
         title: 'Description',
-        key: 'file.created_on'
+        key: 'description'
     },
     {
         title: 'Unit',
-        key: 'file.filesize',
+        key: 'unit',
+        width: 80,
     },
     {
         title: 'Quantity',
-        key: 'status',
+        key: 'quantity',
+        width: 120
     },
     {
         title: 'Unit cost ($)',
-        key: 'status',
+        key: 'cost_price',
+        width: 120
     },
     {
-        title: 'Total($)',
-        key: 'status',
+        title: 'Selling Price ($)',
+        key: 'selling_price',
+        width: 140
+    },
+    {
+        title: 'Final price($)',
+        key: 'final_price',
+        width: 120
     },
     {
         title: 'Note',
-        key: 'status',
+        key: 'note',
+        width: 220
     },
 ]
 
@@ -197,18 +240,48 @@ const page = ref(1)
 const limit = ref(20)
 const api = useNAD()
 
-const { data, pending, refresh } = await useAsyncData(
+const { data: groups, pending, refresh } = await useAsyncData(
     () => api.request(readItems('estimator_group', {
-        fields: [ 'id', 'status', 'name', 'description' ],
+        fields: [ 'status', 'name', 'description' ],
         limit: -1
     })),
     {
         transform: (response) => {
             console.log('response', response)
-            return response?.items
+            return response?.items?.map((item) => ({
+                ...item,
+                type: 'group',
+                expand: true,
+                children: []
+            }))
         },
     }
 )
+
+const { data: items } = await useAsyncData(
+    () => api.request(readItems('cost_estimator', {
+        filter: {
+            plan_file: route.params?.file_id
+        },
+        limit: -1
+    })),
+    {
+        transform: (response) => {
+            console.log('response cost_estimator', response)
+            let items = response?.items?.map((item) => ({
+                ...item,
+                type: 'item',
+                expand: true,
+            })) || []
+            return arrayToTree(items, {parentId: 'parent', childrenField: 'children', dataField: null })
+        },
+    }
+)
+
+const rows = computed(() => groups.value?.map((group) => ({
+    ...group,
+    children: items.value?.filter((item) => item?.group === group?.name)
+}) ))
 
 </script>
 
