@@ -82,7 +82,7 @@ const columns = [
     {
         title: 'STATUS',
         key: 'status',
-        width: 100,
+        width: 140,
         render: (row) => {
             let type: string = 'default'
             if( row?.status === 'completed' ) {
