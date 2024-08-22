@@ -17,7 +17,7 @@
                     <i class="i-custom-arrow-narrow-left text-2xl leading-0 text-neutral-01"></i>
                 </nuxt-link>
                 <div class="font-semibold text-neutral-01">Estimation</div>
-                <div class="ml-auto">GRAND TOTAL: $141.147</div>
+                <div class="ml-auto text-neutral-01">GRAND TOTAL: {{ subTotalPrice }}$</div>
             </div>
             <div class="grid gap-5 lg:grid-cols-4 p-5 bg-hex-191B1B">
                 <div class="p-3 rounded border border-neutral-01 border-opacity-10 bg-neutral-07">
@@ -164,14 +164,14 @@ function goBack() {
 const { data: project } = await useProject()
 
 const columns = [
-    {
-        title: '',
-        key: 'no',
-        // width: '30%',
-        render: (rowData, rowIndex) => {
-            console.log('')
-        },
-    },
+    // {
+    //     title: '',
+    //     key: 'no',
+    //     // width: '30%',
+    //     render: (rowData, rowIndex) => {
+    //         console.log('')
+    //     },
+    // },
     {
         title: 'Items group',
         key: 'name',
@@ -179,6 +179,10 @@ const columns = [
             let colSpan = 1
             if(rowData?.type === 'group') {
                 colSpan = 6
+            }
+
+            if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
+                colSpan = 4
             }
 
             return colSpan
@@ -205,7 +209,27 @@ const columns = [
     {
         title: 'Unit cost ($)',
         key: 'cost_price',
-        width: 120
+        width: 120,
+        colSpan: (rowData, rowIndex) => {
+            let colSpan = 1
+            if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
+                colSpan = 2
+            }
+
+            return colSpan
+        },
+        render: (rowData, rowIndex) => {
+            if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
+                return h(
+                    'span',
+                    {
+                        class: 'font-bold'
+                    },
+                    rowData?.cost_price
+                )
+            }
+            return rowData?.cost_price
+        }
     },
     {
         title: 'Selling Price ($)',
@@ -215,7 +239,15 @@ const columns = [
     {
         title: 'Final price($)',
         key: 'final_price',
-        width: 120
+        width: 120,
+        colSpan: (rowData, rowIndex) => {
+            let colSpan = 1
+            if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
+                colSpan = 2
+            }
+
+            return colSpan
+        },
     },
     {
         title: 'Note',
@@ -239,6 +271,22 @@ function rowProps(row) {
     }
 }
 
+function summary(pageData) {
+    return {
+        name: {
+        value: h(
+            'span',
+            { style: { color: 'red' } },
+            pageData?.reduce(
+                (prevValue, row) => Number(prevValue) + Number(row.final_price || 0),
+                0
+            )
+        ),
+            colSpan: 3
+        }
+    }
+}
+
 const page = ref(1)
 const limit = ref(20)
 const api = useNAD()
@@ -255,7 +303,7 @@ const { data: groups, pending, refresh } = await useAsyncData(
                 type: 'group',
                 expand: true,
                 children: []
-            })).filter((item) => item?.cost_estimator?.length)
+            })).filter((item) => item?.cost_estimator?.length > 0)
         },
     }
 )
@@ -275,15 +323,43 @@ const { data: items } = await useAsyncData(
                 type: 'item',
                 expand: true,
             })) || []
-            return arrayToTree(items, {parentId: 'parent', childrenField: 'children', dataField: null })
+            return items
         },
     }
 )
 
-const rows = computed(() => groups.value?.map((group) => ({
-    ...group,
-    children: items.value?.filter((item) => item?.group === group?.name)?.map((item, index) => ({...item, index}))
-}) ))
+const treeItems = computed(() => arrayToTree(items.value, {parentId: 'parent', childrenField: 'children', dataField: null }))
+
+const subTotalPrice = computed(() => items.value?.reduce(
+    (prevValue, row) => {
+        let output = prevValue + Number(row?.final_price || 0)
+        return parseFloat(output?.toFixed(2))
+    },
+    0
+))
+
+const rows = computed(() => ([
+    ...groups.value?.map((group) => ({
+        ...group,
+        children: treeItems.value?.filter((item) => item?.group === group?.name)?.map((item, index) => ({...item, index}))
+    })),
+    {
+        type: 'subtotal',
+        cost_price: 'SUBTOTAL',
+        final_price: subTotalPrice.value
+    },
+    {
+        type: 'discount',
+        cost_price: 'Discount',
+        final_price: 0
+    },
+    {
+        type: 'grand_total',
+        cost_price: 'GRAND TOTAL',
+        final_price: subTotalPrice.value
+    },
+]))
+
 
 </script>
 
