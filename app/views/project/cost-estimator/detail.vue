@@ -472,7 +472,12 @@ const rows = computed(() => ([
         cost_price: 'GRAND TOTAL',
         final_price: subTotalPrice.value
     },
-].filter(({children}) => children?.length) ))
+].filter(({children, type}) => {
+    if( type === 'group' && !children?.length ) {
+        return false
+    }
+    return true
+}) ))
 
 const showMeasurement = ref(false)
 const pixelLength = ref(0)
