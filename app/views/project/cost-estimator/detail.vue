@@ -57,6 +57,7 @@
                     :data="rows"
                     default-expand-all
                     :single-line="false"
+                    :row-class-name="rowClassName"
                     style="
                         --n-th-color: #14E3AE;
                         --n-td-color: transparent;
@@ -164,20 +165,24 @@ function goBack() {
 const { data: project } = await useProject()
 
 const columns = [
-    // {
-    //     title: '',
-    //     key: 'no',
-    //     // width: '30%',
-    //     render: (rowData, rowIndex) => {
-    //         console.log('')
-    //     },
-    // },
+    {
+        title: '',
+        key: 'no',
+        // width: '30%',
+        render: (rowData, rowIndex) => {
+            console.log('')
+        },
+    },
     {
         title: 'Items group',
         key: 'name',
         colSpan: (rowData, rowIndex) => {
             let colSpan = 1
             if(rowData?.type === 'group') {
+                colSpan = 6
+            }
+
+            if( rowData?.type === 'item' && !rowData?.parent ) {
                 colSpan = 6
             }
 
@@ -200,6 +205,12 @@ const columns = [
         title: 'Unit',
         key: 'unit',
         width: 80,
+        render: (rowData, rowIndex) => {
+            if( rowData?.type === 'item' && !rowData?.parent ) {
+                return ''
+            }
+            return rowData?.unit
+        }
     },
     {
         title: 'Quantity',
@@ -256,18 +267,13 @@ const columns = [
     },
 ]
 
-function rowProps(row) {
-    return {
-        style: 'cursor: pointer;',
-        onClick: () => {
-            navigateTo({
-                name: 'project-cost-estimator-detail',
-                params: {
-                    id: route.params?.id,
-                    file_id: row?.id
-                }
-            })
-        }
+function rowClassName(rowData, index) {
+    if( rowData.type === 'group' ) {
+        return 'estimator-group bg-dark-05 font-bold text-base'
+    }
+
+    if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
+        return 'bg-dark-05 font-bold text-base'
     }
 }
 
@@ -366,5 +372,8 @@ const rows = computed(() => ([
 <style lang="scss">
 [data-col-key="no"][style^="--indent-offset: 2"] {
     border-bottom-color: transparent !important;
+}
+[data-col-key="no"][style^="--indent-offset: 1"] {
+    border-top: 1px solid var(--n-merged-border-color) !important;
 }
 </style>
