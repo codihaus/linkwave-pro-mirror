@@ -18,6 +18,33 @@
                 </nuxt-link>
                 <div class="font-semibold text-neutral-01">Estimation</div>
                 <div class="ml-auto text-neutral-01">GRAND TOTAL: {{ subTotalPrice }}$</div>
+                <n-button type="primary" @click="showMeasurement=true">
+                    <i class="i-custom-ruler text-2xl leading-0 mr-2"></i>
+                    Measurement ratio
+                </n-button>
+                <n-modal v-model:show="showMeasurement">
+                    <div class="container">
+                        <div class="p-5 lg:p-6 bg-neutral-06 bg-opacity-90 rounded-xl">
+                            <div class="flex items-center p-2 bg-neutral-09 rounded-lg gap-6">
+                                <n-button type="info" size="large">
+                                    <i class="i-custom-ruler text-2xl leading-0 mr-2"></i>
+                                    Set Scale by Measurement Line
+                                </n-button>
+                                <div class="flex items-center gap-2">
+                                    <div class="text-white">Detected PixelLength:</div>
+                                    <div class="flex items-center gap-3 px-4 bg-neutral-07 rounded">
+                                        <div class="text-neutral-01">{{pixelLength}}</div>
+                                        <n-select v-model:value="measurementUnit" :options="unitOptions" disabled style="--n-border: 0" />
+                                    </div>
+                                </div>
+                                <n-button type="primary" size="large" class="ml-auto">Save</n-button>
+                            </div>
+                            <div class="rounded-lg mt-4">
+                                <img :src="getCMSUrl(`assets/${file?.file}`)" alt="">
+                            </div>
+                        </div>
+                    </div>
+                </n-modal>
             </div>
             <div class="grid gap-5 lg:grid-cols-4 p-5 bg-hex-191B1B">
                 <div class="p-3 rounded border border-neutral-01 border-opacity-10 bg-neutral-07">
@@ -138,7 +165,7 @@
     </layout-view>
 </template>
 <script setup lang="ts">
-import { readItems } from '@directus/sdk';
+import { readItem, readItems } from '@directus/sdk';
 import LazyRightSidebar from '../components/right-sidebar.vue'
 import SubNavigation from '../components/sub-navigation.vue'
 import { NTag } from 'naive-ui';
@@ -151,6 +178,7 @@ definePageMeta({
     hideSidebar: true
 })
 
+const api = useNAD()
 const route = useRoute()
 
 function goBack() {
@@ -163,6 +191,12 @@ function goBack() {
 }
 
 const { data: project } = await useProject()
+const { getCMSUrl } = useCMSUrl()
+
+const { data: file } = await useAsyncData(
+    () => api.request(readItem('files', route.params?.file_id))
+)
+
 
 const columns = [
     {
@@ -170,7 +204,25 @@ const columns = [
         key: 'no',
         // width: '30%',
         render: (rowData, rowIndex) => {
-            console.log('')
+            if(rowData?.type === 'group' ) {
+                return rowData?.name
+            }
+        },
+        colSpan: (rowData, rowIndex) => {
+            let colSpan = 1
+            if(rowData?.type === 'group') {
+                colSpan = 7
+            }
+
+            // if( rowData?.type === 'item' && !rowData?.parent ) {
+            //     colSpan = 6
+            // }
+
+            // if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
+            //     colSpan = 4
+            // }
+
+            return colSpan
         },
     },
     {
@@ -271,6 +323,9 @@ function rowClassName(rowData, index) {
     if( rowData.type === 'group' ) {
         return 'estimator-group bg-dark-05 font-bold text-base'
     }
+    if( rowData?.type === 'item' && !rowData?.parent ) {
+        return 'font-bold bg-neutral-04 bg-opacity-20'
+    }
 
     if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
         return 'bg-dark-05 font-bold text-base'
@@ -295,7 +350,6 @@ function summary(pageData) {
 
 const page = ref(1)
 const limit = ref(20)
-const api = useNAD()
 
 const { data: groups, pending, refresh } = await useAsyncData(
     () => api.request(readItems('estimator_group', {
@@ -365,6 +419,16 @@ const rows = computed(() => ([
         final_price: subTotalPrice.value
     },
 ]))
+
+const showMeasurement = ref(false)
+const pixelLength = ref(0)
+const measurementUnit = ref('inch')
+const unitOptions = ref([
+    {
+        label: 'Inch/mm',
+        value: 'inch/mm'
+    }
+])
 
 
 </script>
