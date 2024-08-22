@@ -17,7 +17,7 @@
                     <i class="i-custom-arrow-narrow-left text-2xl leading-0 text-neutral-01"></i>
                 </nuxt-link>
                 <div class="font-semibold text-neutral-01">Estimation</div>
-                <div class="ml-auto text-neutral-01">GRAND TOTAL: {{ subTotalPrice }}$</div>
+                <div class="ml-auto text-neutral-01">GRAND TOTAL: {{ parsePrice(subTotalPrice) }}$</div>
                 <n-button type="primary" @click="showMeasurement=true">
                     <i class="i-custom-ruler text-2xl leading-0 mr-2"></i>
                     Measurement ratio
@@ -267,7 +267,8 @@ const columns = [
     {
         title: 'Quantity',
         key: 'quantity',
-        width: 120
+        width: 120,
+        render: (rowData) => parsePrice(rowData?.quantity)
     },
     {
         title: 'Unit cost ($)',
@@ -291,13 +292,14 @@ const columns = [
                     rowData?.cost_price
                 )
             }
-            return rowData?.cost_price
+            return parsePrice(rowData?.cost_price)
         }
     },
     {
         title: 'Selling Price ($)',
         key: 'selling_price',
-        width: 140
+        width: 140,
+        render: (rowData) => parsePrice(rowData?.selling_price)
     },
     {
         title: 'Final price($)',
@@ -311,6 +313,7 @@ const columns = [
 
             return colSpan
         },
+        render: (rowData) => parsePrice(rowData?.final_price)
     },
     {
         title: 'Note',
@@ -323,8 +326,8 @@ function rowClassName(rowData, index) {
     if( rowData.type === 'group' ) {
         return 'estimator-group bg-dark-05 font-bold text-base'
     }
-    if( rowData?.type === 'item' && !rowData?.parent ) {
-        return 'font-bold bg-neutral-04 bg-opacity-20'
+    if( rowData?.type === 'item' ) {
+        return  !rowData?.parent ? 'estimator-item-parent font-bold bg-neutral-04 bg-opacity-20' : 'estimator-item'
     }
 
     if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
