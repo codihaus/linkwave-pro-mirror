@@ -168,6 +168,7 @@
 import { readItem, readItems } from '@directus/sdk';
 import LazyRightSidebar from '../components/right-sidebar.vue'
 import SubNavigation from '../components/sub-navigation.vue'
+import EditCell from './edit-cell.vue'
 import { NInput, NTag } from 'naive-ui';
 import millify from 'millify'
 import { arrayToTree } from 'performant-array-to-tree';
@@ -196,47 +197,6 @@ const { getCMSUrl } = useCMSUrl()
 const { data: file } = await useAsyncData(
     () => api.request(readItem('files', route.params?.file_id))
 )
-
-const ShowOrEdit = defineComponent({
-    props: {
-        value: [String, Number],
-        onUpdateValue: [Function, Array]
-    },
-    setup(props) {
-        const isEdit = ref(false)
-        const inputRef = ref(null)
-        const inputValue = ref(props.value)
-        function handleOnClick() {
-        isEdit.value = true
-        nextTick(() => {
-            inputRef.value.focus()
-        })
-        }
-        function handleChange() {
-            props.onUpdateValue(inputValue.value)
-            isEdit.value = false
-        }
-        return () =>
-        h(
-            'div',
-            {
-                style: 'min-height: 22px',
-                onClick: handleOnClick
-            },
-            isEdit.value
-            ? h(NInput, {
-                ref: inputRef,
-                value: inputValue.value,
-                onUpdateValue: (v) => {
-                inputValue.value = v
-                },
-                onChange: handleChange,
-                onBlur: handleChange
-            })
-            : props.value
-        )
-    }
-})
 
 const columns = [
     {
@@ -310,14 +270,15 @@ const columns = [
         width: 120,
         render: (rowData) => {
             if( rowData?.type === 'item' && !rowData?.parent ) {
-                return h(ShowOrEdit, {
-                    value: rowData.quantity,
-                    onUpdateValue(v) {
-                        items.value[rowData.index].quantity = v
-                    }
-                })
+                return ''
             }
-            return parsePrice(rowData?.quantity)
+            return h(EditCell, {
+                value: rowData?.quantity,
+                onUpdateValue(v) {
+                    items.value[rowData.index].quantity = v
+                }
+            })
+            return  parsePrice(rowData?.quantity)
         }
     },
     {
@@ -346,7 +307,7 @@ const columns = [
         }
     },
     {
-        title: 'Selling Price ($)',
+        title: 'Labor cost ($)',
         key: 'selling_price',
         width: 140,
         render: (rowData) => parsePrice(rowData?.selling_price)
