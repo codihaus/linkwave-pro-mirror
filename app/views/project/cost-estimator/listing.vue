@@ -135,6 +135,7 @@ const { data, pending, refresh } = await useAsyncData(
         limit: limit.value
     })),
     {
+        server: false,
         default: () => ([]),
         transform: (response) => {
             console.log('response', response)
