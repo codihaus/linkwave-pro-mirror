@@ -168,7 +168,7 @@
 import { readItem, readItems } from '@directus/sdk';
 import LazyRightSidebar from '../components/right-sidebar.vue'
 import SubNavigation from '../components/sub-navigation.vue'
-import { NTag } from 'naive-ui';
+import { NInput, NTag } from 'naive-ui';
 import millify from 'millify'
 import { arrayToTree } from 'performant-array-to-tree';
 
@@ -197,6 +197,46 @@ const { data: file } = await useAsyncData(
     () => api.request(readItem('files', route.params?.file_id))
 )
 
+const ShowOrEdit = defineComponent({
+    props: {
+        value: [String, Number],
+        onUpdateValue: [Function, Array]
+    },
+    setup(props) {
+        const isEdit = ref(false)
+        const inputRef = ref(null)
+        const inputValue = ref(props.value)
+        function handleOnClick() {
+        isEdit.value = true
+        nextTick(() => {
+            inputRef.value.focus()
+        })
+        }
+        function handleChange() {
+            props.onUpdateValue(inputValue.value)
+            isEdit.value = false
+        }
+        return () =>
+        h(
+            'div',
+            {
+                style: 'min-height: 22px',
+                onClick: handleOnClick
+            },
+            isEdit.value
+            ? h(NInput, {
+                ref: inputRef,
+                value: inputValue.value,
+                onUpdateValue: (v) => {
+                inputValue.value = v
+                },
+                onChange: handleChange,
+                onBlur: handleChange
+            })
+            : props.value
+        )
+    }
+})
 
 const columns = [
     {
@@ -268,7 +308,17 @@ const columns = [
         title: 'Quantity',
         key: 'quantity',
         width: 120,
-        render: (rowData) => parsePrice(rowData?.quantity)
+        render: (rowData) => {
+            if( rowData?.type === 'item' && !rowData?.parent ) {
+                return h(ShowOrEdit, {
+                    value: rowData.quantity,
+                    onUpdateValue(v) {
+                        items.value[rowData.index].quantity = v
+                    }
+                })
+            }
+            return parsePrice(rowData?.quantity)
+        }
     },
     {
         title: 'Unit cost ($)',
@@ -381,10 +431,11 @@ const { data: items } = await useAsyncData(
     {
         transform: (response) => {
             console.log('response cost_estimator', response)
-            let items = response?.items?.map((item) => ({
+            let items = response?.items?.map((item, index) => ({
                 ...item,
                 type: 'item',
                 expand: true,
+                index
             })) || []
             return items
         },
@@ -404,7 +455,7 @@ const subTotalPrice = computed(() => items.value?.reduce(
 const rows = computed(() => ([
     ...groups.value?.map((group) => ({
         ...group,
-        children: treeItems.value?.filter((item) => item?.group === group?.name)?.map((item, index) => ({...item, index}))
+        children: treeItems.value?.filter((item) => item?.group === group?.name)?.map((item, index) => ({...item}))
     })),
     {
         type: 'subtotal',
@@ -421,7 +472,7 @@ const rows = computed(() => ([
         cost_price: 'GRAND TOTAL',
         final_price: subTotalPrice.value
     },
-]))
+].filter(({children}) => children?.length) ))
 
 const showMeasurement = ref(false)
 const pixelLength = ref(0)
