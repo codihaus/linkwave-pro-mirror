@@ -129,7 +129,8 @@ const { data, pending, refresh } = await useAsyncData(
     () => api.request(readItems('files', {
         fields: [ 'id', 'status', 'file.filesize', 'file.filename_disk', 'file.filename_download', 'file.created_on' ],
         filter: {
-            project: Number(route.params?.id)
+            project: Number(route.params?.id),
+            type: 'floor'
         },
         page: page.value,
         limit: limit.value
