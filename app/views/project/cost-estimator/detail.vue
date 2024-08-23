@@ -185,7 +185,7 @@
     </layout-view>
 </template>
 <script setup lang="ts">
-import { readItem, readItems, updateItem } from '@directus/sdk';
+import { customEndpoint, readItem, readItems, updateItem } from '@directus/sdk';
 import LazyRightSidebar from '../components/right-sidebar.vue'
 import SubNavigation from '../components/sub-navigation.vue'
 import EditCell from './edit-cell.vue'
@@ -479,31 +479,6 @@ const {
     drawLine
 } = useDrawer()
 
-const { pending: saving, refresh: saveSemiData } = await useAsyncData(
-    () => semiData.value.length > 0 ? api.request(updateItem('files', route.params?.file_id,{
-        semi_data: semiData.value
-    })) : {}
-)
-
-async function onSaveSemiData() {
-    try {
-        await saveSemiData()
-        notify.create({
-            type: 'success',
-            title: 'Successfully',
-            description: 'Saved measurement length!',
-            duration: 3000
-        })
-    } catch(e) {
-        notify.create({
-            type: 'error',
-            title: 'Failed',
-            description: 'Please try again!',
-            duration: 3000
-        })
-        console.log('save semi data error', e)
-    }
-}
 
 function useDrawer() {
     
@@ -661,6 +636,38 @@ const { data: file } = await useAsyncData(
 if( file.value?.semi_data ) {
     semiData.value = file.value?.semi_data
     console.log('semiData', semiData.value)
+}
+
+
+const { pending: saving, refresh: saveSemiData } = await useAsyncData(
+    () => semiData.value.length > 0 ? api.request(updateItem('files', route.params?.file_id,{
+        semi_data: semiData.value
+    })) : {}
+)
+
+async function onSaveSemiData() {
+    try {
+        await saveSemiData()
+        await api.request(customEndpoint({
+            method: 'POST',
+            path: `/project/${route.params?.id}/cost-estimator/update-semi/${route.params?.file_id}`,
+        }))
+
+        notify.create({
+            type: 'success',
+            title: 'Successfully',
+            description: 'Processing calculation!',
+            duration: 3000
+        })
+    } catch(e) {
+        notify.create({
+            type: 'error',
+            title: 'Failed',
+            description: 'Please try again!',
+            duration: 3000
+        })
+        console.log('save semi data error', e)
+    }
 }
 </script>
 

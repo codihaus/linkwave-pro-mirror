@@ -1,6 +1,6 @@
 <template>
     <div @click="handleOnClick">
-        <n-input
+        <n-input-number
             v-if="isEdit"
             ref="inputRef"
             v-model:value="inputValue"
