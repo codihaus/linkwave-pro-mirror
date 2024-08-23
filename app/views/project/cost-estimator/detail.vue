@@ -23,24 +23,44 @@
                     Measurement ratio
                 </n-button>
                 <n-modal v-model:show="showMeasurement">
-                    <div class="container">
-                        <div class="p-5 lg:p-6 bg-neutral-06 bg-opacity-90 rounded-xl">
-                            <div class="flex items-center p-2 bg-neutral-09 rounded-lg gap-6">
-                                <n-button type="info" size="large">
-                                    <i class="i-custom-ruler text-2xl leading-0 mr-2"></i>
-                                    Set Scale by Measurement Line
+                    <div class="container lg:px-0 my-10">
+                        <div class="relative p-5 lg:p-6 bg-neutral-06 bg-opacity-90 rounded-xl">
+                            <div class="absolute -top-3 -right-3">
+                                <n-button type="error" icon text @click="showMeasurement = false">
+                                    <i class="i-custom-close text-2xl leading-0"></i>
                                 </n-button>
+                            </div>
+                            <div class="flex items-center p-2 bg-neutral-09 rounded-lg gap-6">
                                 <div class="flex items-center gap-2">
-                                    <div class="text-white">Detected PixelLength:</div>
-                                    <div class="flex items-center gap-3 px-4 bg-neutral-07 rounded">
-                                        <div class="text-neutral-01">{{pixelLength}}</div>
-                                        <n-select v-model:value="measurementUnit" :options="unitOptions" disabled style="--n-border: 0" />
+                                    <div class="text-white">Detected Length:</div>
+                                    <div class="flex items-center gap-3 px-4 bg-neutral-05 rounded">
+                                        <div class="text-red-5 min-w-48 text-center">{{semiData.length}}</div>
                                     </div>
                                 </div>
-                                <n-button type="primary" size="large" class="ml-auto">Save</n-button>
+                                <div class="flex items-center gap-2">
+                                    <div class="text-white">Unit:</div>
+                                    <div class="flex items-center gap-3 px-4 bg-neutral-07 rounded">
+                                        <n-select v-model:value="semiData.unit" :options="unitOptions" disabled style="--n-border: 0" />
+                                    </div>
+                                </div>
+                                <n-button type="info" size="large" @click="startDraw">
+                                    <i class="i-custom-ruler text-2xl leading-0 mr-2"></i>
+                                    {{ canDraw ? 'Stop Draw Line' : 'Draw Measurement Line' }}
+                                </n-button>
+                                <n-button
+                                    type="primary"
+                                    size="large"
+                                    class="ml-auto"
+                                    :disabled="saving"
+                                    :loading="saving"
+                                    @click="saveSemiData"
+                                >Save</n-button>
                             </div>
-                            <div class="rounded-lg mt-4">
-                                <img :src="getCMSUrl(`assets/${file?.file}`)" alt="">
+                            <div class="rounded-lg mt-4 text-center">
+                                <div class="relative inline-block">
+                                    <canvas ref="drawer" id="drawer" class="absolute w-full h-full inset-0" :class="{'cursor-crosshair': canDraw, 'pointer-events-none': ! canDraw}" ></canvas>
+                                    <img ref="drawerImage" :src="getCMSUrl(`assets/${file?.file}`)" class="">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -165,7 +185,7 @@
     </layout-view>
 </template>
 <script setup lang="ts">
-import { readItem, readItems } from '@directus/sdk';
+import { readItem, readItems, updateItem } from '@directus/sdk';
 import LazyRightSidebar from '../components/right-sidebar.vue'
 import SubNavigation from '../components/sub-navigation.vue'
 import EditCell from './edit-cell.vue'
@@ -194,9 +214,7 @@ function goBack() {
 const { data: project } = await useProject()
 const { getCMSUrl } = useCMSUrl()
 
-const { data: file } = await useAsyncData(
-    () => api.request(readItem('files', route.params?.file_id))
-)
+
 
 const columns = [
     {
@@ -442,15 +460,191 @@ const rows = computed(() => ([
 
 const showMeasurement = ref(false)
 const pixelLength = ref(0)
-const measurementUnit = ref('inch')
+const measurementUnit = ref('inches')
 const unitOptions = ref([
     {
-        label: 'Inch/mm',
-        value: 'inch/mm'
+        label: 'Inch',
+        value: 'inches'
     }
 ])
 
+const {
+    canDraw,
+    drawer,
+    drawerImage,
+    semiData,
+    startDraw,
+    drawSavedPoints,
+    drawLine
+} = useDrawer()
 
+const { pending: saving, refresh: saveSemiData } = await useAsyncData(
+    () => semiData.value.length > 0 ? api.request(updateItem('files', route.params?.file_id,{
+        semi_data: semiData.value
+    })) : {}
+)
+
+function useDrawer() {
+    
+    const canDraw = ref(false)
+    const drawer = ref()
+    const drawerImage = ref()
+    const semiData = ref({
+        unit: "inches",
+        length: 0,
+        points: [[],[]],
+        displayPoints: []
+    })
+
+    const points = ref([])
+    const isDrawing = ref<boolean>(false);
+    const isVertical = ref<boolean | null>(null);
+
+    function startDraw(force = false) {
+
+        canDraw.value = ! canDraw.value
+
+        if( force ) {
+            canDraw.value = true
+        }
+
+        if(!canDraw.value) return
+
+
+        drawer.value.width = drawerImage.value.width
+        drawer.value.height = drawerImage.value.height
+
+        drawer.value?.removeEventListener('mousedown', drawPoint)
+        drawer.value?.addEventListener('mousedown', drawPoint)
+
+        drawer.value?.removeEventListener('mousemove', drawOnMove)
+        drawer.value?.addEventListener('mousemove', drawOnMove)
+    }
+
+    function drawPoint(event) {
+        console.log('canvas click')
+        // Get the starting point
+        const rect = drawer.value?.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        points.value.push({ x, y });
+        isDrawing.value = true;
+        if (points.value?.length === 2) {
+            isDrawing.value = false;
+            setSemiData(points.value)
+            points.value = [];
+        }
+    }
+
+    function drawOnMove(event) {
+        if (!isDrawing.value) return;
+        
+        const context = drawer.value?.getContext('2d');
+        
+        // Get the current mouse position
+        const rect = drawer.value?.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        
+        // Clear the canvas (if you want to only show the current line)
+        context.clearRect(0, 0, drawer.value?.width, drawer.value?.height);
+        
+        console.log('canvas move', points.value?.[0], { x, y })
+        // Draw the line following the mouse position
+        drawLine(points.value?.[0], { x, y });
+    }
+
+
+    function drawSavedPoints() {
+        const context = drawer.value?.getContext('2d');
+        
+        // drawer.value.width = drawerImage.value.width
+        // drawer.value.height = drawerImage.value.height
+        console.log('drawSavedPoints', semiData.value.displayPoints)
+        if( semiData.value.displayPoints?.length > 1 ) {
+            startDraw(true)
+            canDraw.value = false
+
+            context.clearRect(0, 0, drawer.value?.width, drawer.value?.height);
+            drawLine(semiData.value.displayPoints?.[0], semiData.value.displayPoints?.[1]);
+        }
+    }
+
+    function drawLine(point1, point2) {
+        const context = drawer.value?.getContext('2d');
+        context.beginPath();
+
+        if (Math.abs(point1.x - point2.x) > Math.abs(point1.y - point2.y)) {
+        // Draw a horizontal line
+            context.moveTo(point1.x, point1.y);
+            context.lineTo(point2.x, point1.y); // Horizontal line at y of point1
+            isVertical.value = false
+        } else {
+        // Draw a vertical line
+            context.moveTo(point1.x, point1.y);
+            context.lineTo(point1.x, point2.y); // Vertical line at x of point1
+            isVertical.value = true
+        }
+
+        context.strokeStyle = 'red'; // Set the color of the line
+        context.lineWidth = 10; // Set the width of the line
+        context.stroke(); // Draw the line
+        console.log('drawLine', point1, point2)
+    }
+
+    function setSemiData(points = []) {
+        let ratioX = drawerImage.value.naturalWidth / drawerImage.value.width
+        let ratioY = drawerImage.value.naturalHeight / drawerImage.value.height
+
+        let calculatedPoints = points?.map((p) => ({
+            x: ratioX * p.x,
+            y: ratioY * p.y,
+        }))
+        semiData.value.points = calculatedPoints?.map((p) => ([
+            p?.x,
+            p?.y
+        ]))
+
+        semiData.value.displayPoints = points
+        
+        semiData.value.length = isVertical === true ? Math.abs(calculatedPoints[0].y - calculatedPoints[1].y) : Math.abs(calculatedPoints[0].x - calculatedPoints[1].x)
+    }
+
+    return {
+        canDraw,
+        drawer,
+        drawerImage,
+        semiData,
+        startDraw,
+        drawSavedPoints,
+        drawLine
+    }
+}
+
+
+watch([showMeasurement, drawerImage], () => {
+    console.log('drawerImage.value', drawerImage.value?.height)
+    if( showMeasurement.value ) {
+        drawerImage.value?.addEventListener('load', drawSavedPoints)
+        
+    } else {
+        drawerImage.value?.removeEventListener('load', drawSavedPoints)
+    }
+})
+
+const { data: file } = await useAsyncData(
+    () => api.request(readItem('files', route.params?.file_id)),
+    {
+        transform: (response) => {
+            if( response?.semi_data ) {
+                semiData.value = response?.semi_data
+            }
+            console.log('semiData', semiData.value)
+            return response
+        }
+    }
+)
 </script>
 
 <style lang="scss">
