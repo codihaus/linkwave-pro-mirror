@@ -656,16 +656,12 @@ watch([showMeasurement, drawerImage], () => {
 
 const { data: file } = await useAsyncData(
     () => api.request(readItem('files', route.params?.file_id)),
-    {
-        transform: (response) => {
-            if( response?.semi_data ) {
-                semiData.value = response?.semi_data
-            }
-            console.log('semiData', semiData.value)
-            return response
-        }
-    }
 )
+
+if( file.value?.semi_data ) {
+    semiData.value = file.value?.semi_data
+    console.log('semiData', semiData.value)
+}
 </script>
 
 <style lang="scss">
