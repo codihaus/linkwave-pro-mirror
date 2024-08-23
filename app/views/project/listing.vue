@@ -201,7 +201,7 @@ const { data: projects, pending, refresh: refreshProjects } = await useAsyncData
     {
         transform: (response) => response?.items?.map((item) => ({
             ...item,
-            logo: item?.logo ? getCMSUrl(`assets/${item?.logo}`) : null,
+            logo: item?.logo ? getCMSUrl(`assets/${item?.logo}?key=system-medium-cover`) : null,
             location: item?.location?.name || '',
             type: `${upperFirst(item?.type)} buildings`
         })),

@@ -143,7 +143,7 @@
                 </div>
                 <div class="flex flex-col gap-4 lg:w-6/12 px-4 py-5 lg:px-6 lg:py-6">
                     <div class="text-white">Floor Plan</div>
-                    <div v-if="!quota?.can_upload" class="py-2 px-2 mt-2 rounded text-red-300  bg-red-900">
+                    <div v-if="!quota?.can_upload && !quotaLoading" class="py-2 px-2 mt-2 rounded text-red-300  bg-red-900">
                         You have reached the upload limit of this month <span class="font-semibold">({{quota?.current_plan?.max_files_upload - quota?.remaining}}/{{quota?.current_plan?.max_files_upload}} Files)</span>
                     </div>
                     <n-upload
@@ -154,7 +154,7 @@
                         :file-list="files"
                         ref="uploadField"
                         action=""
-                        accept="application/pdf"
+                        accept="application/pdf, image/png, image/jpg"
                         :custom-request="upload"
                         @change="onFileChange"
                         @before-upload="beforeUpload"
@@ -389,7 +389,7 @@ async function searchUser(query: string) {
     
 }
 
-const { data: quota, refresh: refreshQuota } = await useQuota()
+const { data: quota, pending: quotaLoading, refresh: refreshQuota } = await useQuota()
 
 const {
     uploadField,
