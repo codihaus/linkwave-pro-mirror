@@ -53,7 +53,7 @@
                                     class="ml-auto"
                                     :disabled="saving"
                                     :loading="saving"
-                                    @click="saveSemiData"
+                                    @click="onSaveSemiData"
                                 >Save</n-button>
                             </div>
                             <div class="rounded-lg mt-4 text-center">
@@ -201,6 +201,7 @@ definePageMeta({
 
 const api = useNAD()
 const route = useRoute()
+const notify = useNaiveNotification()
 
 function goBack() {
     return {
@@ -483,6 +484,26 @@ const { pending: saving, refresh: saveSemiData } = await useAsyncData(
         semi_data: semiData.value
     })) : {}
 )
+
+async function onSaveSemiData() {
+    try {
+        await saveSemiData()
+        notify.create({
+            type: 'success',
+            title: 'Successfully',
+            description: 'Saved measurement length!',
+            duration: 3000
+        })
+    } catch(e) {
+        notify.create({
+            type: 'error',
+            title: 'Failed',
+            description: 'Please try again!',
+            duration: 3000
+        })
+        console.log('save semi data error', e)
+    }
+}
 
 function useDrawer() {
     
