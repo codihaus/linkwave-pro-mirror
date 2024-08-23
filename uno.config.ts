@@ -62,6 +62,7 @@ export default defineConfig({
                 '02': '#0A142C',
                 '03': '#323C61',
                 '04': '#455276',
+                '05': '#111111'
             },
             neutral: {
                 '01': '#FEFEFE',

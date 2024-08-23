@@ -60,6 +60,7 @@ const themeConfig = ref<ThemeConfig>({
             itemColorActive: '#14E3AE',
         },
         Form: {
+            labelTextColor: '#6C7275',
             feedbackHeightMedium: '16px',
         },
         Input: {

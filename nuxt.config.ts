@@ -16,7 +16,7 @@ export default defineNuxtConfig({
         // "@nuxtjs/i18n",
         ["@pinia/nuxt", { autoImports: ["defineStore"] }],
         '@bg-dev/nuxt-naiveui',
-        'nuxt-tour',
+        // 'nuxt-tour',
     ],
     googleFonts: {
         display: 'swap',

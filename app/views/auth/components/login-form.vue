@@ -107,7 +107,7 @@ async function handleSubmit() {
     } else {
         accessToken.value = response?.access_token
 
-        message.success("Logged in successfully!")
+        // message.success("Logged in successfully!")
         notify.create({
             title: 'Logged in successfully!',
             type: 'success',
