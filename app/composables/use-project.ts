@@ -8,6 +8,8 @@ export async function useProject(projectID: number | string | null = null) {
 
     const api = useNAD()
     return await useAsyncData(
-        () => api.request(readItem('projects', projectID)),
+        () => api.request(readItem('projects', projectID, {
+            fields: ['*', 'files.type', 'files.id']
+        })),
     )
 }
