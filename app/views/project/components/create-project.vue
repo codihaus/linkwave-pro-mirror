@@ -151,7 +151,7 @@
                         multiple
                         directory-dnd
                         :show-file-list="false"
-                        :file-list="files"
+                        :file-list="attachments"
                         ref="uploadField"
                         action=""
                         accept="application/pdf, image/png, image/jpg"
@@ -175,8 +175,8 @@
                             </div>
                         </n-upload-dragger>
                     </n-upload>
-                    <div v-if="files?.length" class="min-h-60 flex flex-col gap-6 p-3 bg-neutral-06 rounded-xl mt-6">
-                        <div v-for="file in files" class="flex gap-2.5">
+                    <div v-if="attachments?.length" class="min-h-60 flex flex-col gap-6 p-3 bg-neutral-06 rounded-xl mt-6">
+                        <div v-for="file in attachments" class="flex gap-2.5">
                             <div class="relative flex-grow">
                                 <n-progress
                                     type="line"
@@ -439,6 +439,8 @@ async function handleSubmit() {
     if( thumbnailFiles.value?.length ) {
         data.logo = get(thumbnailFiles.value, '0.file_id')
     }
+
+    console.log('data', data)
 
     try {
         const response = await api.request(customEndpoint({

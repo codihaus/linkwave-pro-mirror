@@ -13,7 +13,7 @@ export async function useUpload(uploadField: Ref, options: any = {
 
     const attachments = ref([])
     const files = ref([])
-    const uploading = computed(() => files.value?.filter(({status}) => ['uploading', 'pending'].includes(status))?.length > 0 )
+    const uploading = computed(() => attachments.value?.filter(({status}) => ['uploading', 'pending'].includes(status))?.length > 0 )
 
     const chunkSize = options?.chunkSize || 1024 * 1024
 
@@ -30,6 +30,7 @@ export async function useUpload(uploadField: Ref, options: any = {
     function resetUploadField() {
         uploadField.value?.clear()
         files.value = []
+        attachments.value = []
     }
 
     const status = {
@@ -49,7 +50,8 @@ export async function useUpload(uploadField: Ref, options: any = {
 
     async function onFileChange({ file, fileList, event }) {
         console.log('onFileChange', file, fileList)
-        files.value = fileList
+        // files.value = fileList
+        attachments.value = fileList
     }
 
 
@@ -151,17 +153,23 @@ export async function useUpload(uploadField: Ref, options: any = {
                 })
                 onFinish()
                 // setTimeout(() => {
-                    files.value = files.value?.map((f) => {
-                        let output = f
-                        if( response?.file_id && output?.id === file?.id ) {
-                            output = {
-                                ...output,
-                                file_id: response?.file_id
-                            }
-                        }
-                        console.log('output', output?.id, file?.id)
-                        return output
-                    })
+                    let uploadedFile = {
+                        ...attachments.value?.find(f => f?.id === file?.id) || {},
+                        file_id: response?.file_id
+                    }
+
+                    files.value.push(uploadedFile)
+                    // files.value = ?.map((f) => {
+                    //     let output = f
+                    //     if( response?.file_id && output?.id === file?.id ) {
+                    //         output = {
+                    //             ...output,
+                    //             file_id: response?.file_id
+                    //         }
+                    //     }
+                    //     console.log('output', output?.id, file?.id)
+                    //     return output
+                    // })
                     console.log('isLastChunk', response?.file_id, files.value)
                 // })
             }
