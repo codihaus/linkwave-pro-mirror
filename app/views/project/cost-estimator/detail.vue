@@ -59,7 +59,7 @@
                             <div class="rounded-lg mt-4 text-center">
                                 <div class="relative inline-block">
                                     <canvas ref="drawer" id="drawer" class="absolute w-full h-full inset-0" :class="{'cursor-crosshair': canDraw, 'pointer-events-none': ! canDraw}" ></canvas>
-                                    <img ref="drawerImage" :src="getCMSUrl(`assets/${file?.file}`)" class="">
+                                    <img ref="drawerImage" :src="getCMSUrl(`assets/${file?.file?.id}`)" class="">
                                 </div>
                             </div>
                         </div>
@@ -69,32 +69,27 @@
             <div class="grid gap-5 lg:grid-cols-4 p-5 bg-hex-191B1B">
                 <div class="p-3 rounded border border-neutral-01 border-opacity-10 bg-neutral-07">
                     <div class="text-white mb-3">PROPERTY OWNER</div>
-                    <div class="text-neutral-03 text-opacity-75 leading-loose">
-                        <div>Hong and Kim Pham</div>
-                        <div>(323) 574-1508</div>
-                        <div>hppzz@yahoo.com</div>
+                    <div class="text-neutral-03 text-opacity-75 leading-normal">
+                        <div>{{project.client_name}}</div>
                     </div>
                 </div>
                 <div class="p-3 rounded border border-neutral-01 border-opacity-10 bg-neutral-07">
                     <div class="text-white mb-3">SCOPE OFWORK</div>
-                    <div class="text-neutral-03 text-opacity-75 leading-loose">
-                        <div>PROPOSED ONE STORY TYPE V DETACH ADU 496 SQ FT</div>
-                        <div>Tel: (423) 369-4717</div>
-                        <div>Email: Johndoe@gmail.com</div>
-                        <div>Add: 14391 Starsia St Westminster CA 92683</div>
+                    <div class="text-neutral-03 text-opacity-75 leading-normal">
+                        <div>{{ project?.description }}</div>
                     </div>
                 </div>
                 <div class="p-3 rounded border border-neutral-01 border-opacity-10 bg-neutral-07">
                     <div class="text-white mb-3">REGIONAL</div>
-                    <div class="text-neutral-03 text-opacity-75 leading-loose">
-                        <div>1740 Gillette Crescent, South</div>
-                        <div>South Pasadena, CA 91030</div>
+                    <div class="text-neutral-03 text-opacity-75 leading-normal">
+                        <div>{{ project?.address }}</div>
+                        <div>{{ project?.location }}</div>
                     </div>
                 </div>
                 <div class="p-3 rounded border border-neutral-01 border-opacity-10 bg-neutral-07">
                     <div class="text-white mb-3">NAME OF FILE</div>
-                    <div class="text-neutral-03 text-opacity-75 leading-loose">
-                        <div>Remodeling Main house+Additional Room 287 Sqft.</div>
+                    <div class="text-neutral-03 text-opacity-75 leading-normal">
+                        <div>{{ file?.file?.filename_download }}</div>
                     </div>
                 </div>
             </div>
@@ -115,77 +110,27 @@
                         --n-td-padding: 16px;
                     "
                 />
-                <!-- <n-table
-                    :bordered="false"
-                    :single-line="false"
-                    style="
-                        --n-th-color: #14E3AE;
-                        --n-td-color: transparent;
-                        --n-border-color: #2E3133;
-                        --n-th-text-color: #100F0F;
-                        --n-td-text-color: #F0F5FB;
-                        --n-td-color-hover: #444;
-                        --n-td-padding: 16px;
-                    "
-                >
-                    <thead>
-                        <tr>
-                            <th v-for="th in columns">{{ th.title }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="group, index in groups">
-                            <td colspan="6">{{ group?.name }}</td>
-                            <td>123</td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>1</td>
-                            <td>Chuẩn Bị</td>
-                            <td>Đào đất làm đường ống nước và foundation</td>
-                            <td>Gói</td>
-                            <td>1</td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>Dọn Dẹp Rác</td>
-                            <td>Dọn dẹp rác thải xây dựng</td>
-                            <td>Lần</td>
-                            <td>4</td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                        </tr>
-                    </tbody>
-                </n-table> -->
-                <!-- <n-data-table
-                    remote
-                    ref="table"
-                    :columns="columns"
-                    :data="data"
-                    :bordered="false"
-                    style="
-                        --n-th-color: transparent;
-                        --n-td-color: transparent;
-                        --n-border-color: #2E3133;
-                        --n-th-text-color: #E8ECEF;
-                        --n-td-text-color: #F0F5FB;
-                        --n-td-color-hover: #444;
-                        --n-td-padding: 16px;
-                    "
-                /> -->
-                    <!-- :loading="pending"
-                    :row-key="rowKey" -->
+            </div>
+            <div class="hidden fixed xinline-flex gap-2 left-1/2 bottom-4 transform -translate-x-1/2 rounded-lg bg-neutral-09 p-3">
+
+                <n-button type="primary" ghost :disabled="savingEdit" :loading="savingEdit" @click="isEditMode=true">
+                    <i class="i-custom-edit text-xl leading-0 mr-2"></i>
+                    <span>{{ 'Edit Mode' }}</span>
+                </n-button>
+                <n-button v-if="isEditMode" type="primary" :disabled="savingEdit" :loading="savingEdit" @click="isEditMode=true">
+                    <i class="i-custom-add text-xl leading-0 mr-2"></i>
+                    <span>{{ 'Add row' }}</span>
+                </n-button>
+                <n-button v-if="isEditMode" type="primary" :disabled="savingEdit" :loading="savingEdit" @click="saveRows">
+                    <span>{{ 'Save' }}</span>
+                </n-button>
             </div>
         </div>
-
+        <pre>{{file}}</pre>
     </layout-view>
 </template>
 <script setup lang="ts">
-import { customEndpoint, readItem, readItems, updateItem } from '@directus/sdk';
+import { createItem, customEndpoint, readItem, readItems, updateItem } from '@directus/sdk';
 import LazyRightSidebar from '../components/right-sidebar.vue'
 import SubNavigation from '../components/sub-navigation.vue'
 import EditCell from './edit-cell.vue'
@@ -215,9 +160,12 @@ function goBack() {
 const { data: project } = await useProject()
 const { getCMSUrl } = useCMSUrl()
 
+const constructionFile = project.value.files?.find((f) => f.type === 'construction')?.id || null
 
+const isEditMode = ref(false)
+const editItems = ref({})
 
-const columns = [
+const columns = computed(() => [
     {
         title: '',
         key: 'no',
@@ -263,14 +211,32 @@ const columns = [
 
             return colSpan
         },
-        render: (rowData, rowIndex) => {
-            if( rowData?.type === 'item'  ) {}
-            return rowData?.name
+        render: (rowData) => {
+            if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
+                return rowData?.name
+            }
+            return h(EditCell, {
+                editAble: isEditMode.value,
+                value: rowData?.name,
+                onUpdateValue(v) {
+                    items.value[rowData.index].name = v
+                    editItems.value[rowData.id] = items.value[rowData.index]
+                }
+            })
         }
     },
     {
         title: 'Description',
-        key: 'description'
+        key: 'description',
+        render: (rowData) => h(EditCell, {
+            editAble: isEditMode.value,
+            value: rowData?.description,
+            inputType: 'textarea',
+            onUpdateValue(v) {
+                items.value[rowData.index].description = v
+                editItems.value[rowData.id] = items.value[rowData.index]
+            }
+        })
     },
     {
         title: 'Unit',
@@ -286,24 +252,27 @@ const columns = [
     {
         title: 'Quantity',
         key: 'quantity',
-        width: 120,
+        width: 140,
         render: (rowData) => {
             if( rowData?.type === 'item' && !rowData?.parent ) {
                 return ''
             }
             return h(EditCell, {
+                editAble: isEditMode.value,
                 value: rowData?.quantity,
+                inputType: 'number',
                 onUpdateValue(v) {
                     items.value[rowData.index].quantity = v
+                    items.value[rowData.index].final_price = parseFloat((v * items.value[rowData.index].selling_price).toFixed(2))
+                    editItems.value[rowData.id] = items.value[rowData.index]
                 }
             })
-            return  parsePrice(rowData?.quantity)
         }
     },
     {
         title: 'Unit cost ($)',
         key: 'cost_price',
-        width: 120,
+        width: 140,
         colSpan: (rowData, rowIndex) => {
             let colSpan = 1
             if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
@@ -322,6 +291,15 @@ const columns = [
                     rowData?.cost_price
                 )
             }
+            return h(EditCell, {
+                editAble: isEditMode.value,
+                value: rowData?.cost_price,
+                inputType: 'number',
+                onUpdateValue(v) {
+                    items.value[rowData.index].cost_price = v
+                    editItems.value[rowData.id] = items.value[rowData.index]
+                }
+            })
             return parsePrice(rowData?.cost_price)
         }
     },
@@ -329,12 +307,21 @@ const columns = [
         title: 'Labor cost ($)',
         key: 'selling_price',
         width: 140,
-        render: (rowData) => parsePrice(rowData?.selling_price)
+        render: (rowData) => h(EditCell, {
+            editAble: isEditMode.value,
+            value: rowData?.selling_price,
+            inputType: 'number',
+            onUpdateValue(v) {
+                items.value[rowData.index].selling_price = v
+                items.value[rowData.index].final_price = parseFloat((v * items.value[rowData.index].quantity).toFixed(2))
+                editItems.value[rowData.id] = items.value[rowData.index]
+            }
+        })
     },
     {
         title: 'Final price($)',
         key: 'final_price',
-        width: 120,
+        width: 140,
         colSpan: (rowData, rowIndex) => {
             let colSpan = 1
             if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
@@ -348,16 +335,25 @@ const columns = [
     {
         title: 'Note',
         key: 'note',
-        width: 220
+        width: 220,
+        render: (rowData) => h(EditCell, {
+            editAble: isEditMode.value,
+            value: rowData?.note,
+            inputType: 'textarea',
+            onUpdateValue(v) {
+                items.value[rowData.index].note = v
+                editItems.value[rowData.id] = items.value[rowData.index]
+            }
+        })
     },
-]
+])
 
 function rowClassName(rowData, index) {
     if( rowData.type === 'group' ) {
-        return 'estimator-group bg-dark-05 font-bold text-base'
+        return 'estimator-group relative bg-dark-05 font-bold text-base'
     }
     if( rowData?.type === 'item' ) {
-        return  !rowData?.parent ? 'estimator-item-parent font-bold bg-neutral-04 bg-opacity-20' : 'estimator-item'
+        return  !rowData?.parent ? 'estimator-item-parent relative font-bold bg-neutral-04 bg-opacity-20' : 'estimator-item'
     }
 
     if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
@@ -404,7 +400,7 @@ const { data: groups, pending, refresh } = await useAsyncData(
 const { data: items } = await useAsyncData(
     () => api.request(readItems('cost_estimator', {
         filter: {
-            plan_file: route.params?.file_id
+            plan_file: constructionFile
         },
         limit: -1
     })),
@@ -458,6 +454,44 @@ const rows = computed(() => ([
     }
     return true
 }) ))
+
+const savingEdit = ref(false)
+async function saveRows() {
+    console.log('editItems', editItems.value)
+    savingEdit.value = true
+
+    let itemsToSave = Object.values(editItems.value)
+    try {
+
+    } catch(e) {
+
+    } finally {
+
+    }
+
+    itemsToSave?.map(async (item) => {
+        let data = {
+            name: item?.name,
+            description: item?.description,
+            note: item?.note,
+            quantity: item?.quantity,
+            unit: item?.unit,
+            cost_price: item?.cost_price,
+            selling_price: item?.selling_price,
+            final_price: item?.final_price,
+            parent: item?.parent
+        }
+        if( item?.type === 'item' ) {
+            await api.request(
+                !item?.id ? createItem('cost_estimator', data) : updateItem('cost_estimator', item?.id, data)
+            )
+        }
+    })
+    savingEdit.value = false
+    isEditMode.value = false
+}
+
+
 
 const showMeasurement = ref(false)
 const pixelLength = ref(0)
@@ -630,7 +664,9 @@ watch([showMeasurement, drawerImage], () => {
 })
 
 const { data: file } = await useAsyncData(
-    () => api.request(readItem('files', route.params?.file_id)),
+    () => api.request(readItem('files', route.params?.file_id, {
+        fields: ['id', 'semi_data', 'file.filename_download', 'file.id']
+    })),
 )
 
 if( file.value?.semi_data ) {
