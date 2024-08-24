@@ -427,7 +427,7 @@ async function handleSubmit() {
     if( files.value?.length ) {
         data.files = {
             create: files.value?.filter((f) => f?.file_id)?.map((file) => ({
-                status: 'published',
+                status: 'processing',
                 type: file?.type?.includes('pdf') ? 'construction' : "floor",
                 file: file?.file_id
             })),
