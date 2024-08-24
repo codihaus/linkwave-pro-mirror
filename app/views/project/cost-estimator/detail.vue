@@ -126,7 +126,6 @@
                 </n-button>
             </div>
         </div>
-        <pre>{{file}}</pre>
     </layout-view>
 </template>
 <script setup lang="ts">
