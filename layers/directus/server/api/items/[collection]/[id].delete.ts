@@ -1,6 +1,6 @@
 import { ErrorDeleteItem } from '@directusLayer/utils/http.status'
 import { Logger } from '@directusLayer/utils/logger.util'
-import { deleteItem } from "@directus/sdk"
+import { deleteItem, deleteItems, readMe } from "@directus/sdk"
 import { handleErrorsDirectus } from '@directusLayer/utils/response.utils'
 
 export default defineEventHandler(async (event) => {
@@ -9,6 +9,8 @@ export default defineEventHandler(async (event) => {
     const id = getRouterParam(event, 'id')
     const collection = getRouterParam(event, 'collection')
     const query = getQuery(event)
+
+    const body = await readBody(event)
 
 
     logger.debug({ id, collection })
@@ -20,10 +22,16 @@ export default defineEventHandler(async (event) => {
     // let data = await apiUser.request(redirectSSO())
     // logger.debug({ data })
 
+    let keys = body?.keys ? body?.keys : [id]
 
-    return apiUser.request(deleteItem(collection as never, id as any)).catch((e: any) => {
-        logger.error(`Error: deleteItem -> [${collection} : ${id}]`)
+    logger.debug({ keys })
+
+    return apiUser.request(deleteItems(collection as never, keys)).catch(async(e: any) => {
+        logger.error(`Error: deleteItem -> [${collection} : ${id}, ${keys}]`)
         logger.debug({ query })
+        await apiUser.request(readMe()).then((response) => {
+            logger.debug(response)
+        })
         return handleErrorsDirectus(e, ErrorDeleteItem)
 
     })

@@ -666,8 +666,8 @@ async function createRow() {
 
 async function deleteRows() {
     savingEdit.value = true
-    let keys = checkedRowKeys.value?.map((key) => Number(key?.replace('item-')))
-    await api.request(deleteItems('cost_estimator', keys)).then(() => {
+    let keys = checkedRowKeys.value?.map((key) => Number(key?.replace('item-', '') ))
+    await api.request(deleteItems('cost_estimator', keys)).then(async () => {
         checkedRowKeys.value = []
         notify.create({
             type: 'success',
@@ -675,6 +675,7 @@ async function deleteRows() {
             description: 'Estimator data has been updated successfully!',
             duration: 4000
         })
+        await refreshCostEstimator()
     }).catch(() => {
         savingEdit.value = false
         notify.create({
