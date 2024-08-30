@@ -82,6 +82,10 @@ rules.value = {
             message: "Wrong credentials",
             validator: () => !apiErrors.value.wrongCredentials,
         },
+        {
+            message: "Password must be at least 8 characters ",
+            validator: () => model.value.password.length > 7,
+        },
     ],
 };
 
