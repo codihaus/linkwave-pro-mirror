@@ -216,7 +216,7 @@ import EditCell from './edit-cell.vue'
 import { NInput, NTag } from 'naive-ui';
 import millify from 'millify'
 import { arrayToTree } from 'performant-array-to-tree';
-import { set } from 'lodash-es';
+import { isEqual, set } from 'lodash-es';
 
 definePageMeta({
 	auth: true,
@@ -236,6 +236,8 @@ function goBack() {
         }
     }
 }
+
+const currentUser = useState('currentUser')
 
 const { data: project } = await useProject()
 const { getCMSUrl } = useCMSUrl()
@@ -933,7 +935,8 @@ if( file.value?.semi_data ) {
 
 const { pending: saving, refresh: saveSemiData } = await useAsyncData(
     () => semiData.value.length > 0 ? api.request(updateItem('files', route.params?.file_id,{
-        semi_data: semiData.value
+        semi_data: semiData.value,
+        status: 'recalculating'
     })) : {}
 )
 
@@ -961,6 +964,80 @@ async function onSaveSemiData() {
         console.log('save semi data error', e)
     }
 }
+
+const { socket } = await useSocket()
+
+
+async function subscribe() {
+    const { subscription } = await socket?.value?.subscribe('cost_estimator', {
+        query: {
+            filter: {
+                plan_file: constructionFile
+            },
+            fields: [ 'id', 'user_updated', 'date_updated' ],
+        },
+    });
+
+    console.log('subscription', subscription)
+
+    for await (const sub of subscription) {
+
+        if( sub?.event === 'init' ) {
+            console.log('subscribe item', sub);
+        }
+
+    }   
+}
+
+onMounted(async () => {
+
+    let lastMessage = null
+
+    socket.value?.onWebSocket('message', function (socketMessage: any) {
+        const { type, data, event } = socketMessage;
+        console.log('message', type)
+        if (event === 'create') {
+            // floorFiles.value.unshift(data?.[0])
+        }
+
+        if (socketMessage.type === 'ping') {
+            socket.value?.sendMessage({
+                type: 'pong',
+            });
+        }
+        
+        if (event === 'update') {
+            if( isEqual(lastMessage, socketMessage) ) {
+                return
+            }
+            if( ! lastMessage ) {
+                lastMessage = socketMessage
+            }
+
+
+            console.log('updated item', socketMessage)
+            let semiAutoUpdated = data?.find((item) => item?.user_updated !== currentUser.value.id)
+            if( semiAutoUpdated ) {
+                notify.create({
+                    type: 'info',
+                    title: 'Recalculating successfully!',
+                    description: `Cost estimator has been recalculated. Please check!`
+                })
+                refreshCostEstimator()
+                api.request(updateItem('files', route.params?.file_id,{
+                    status: 'completed'
+                }))
+            }
+        }
+    });
+
+    socket.value.onWebSocket('close', function () {
+        console.log({ event: 'onclose' });
+    });
+
+    await subscribe()
+
+})
 </script>
 
 <style lang="scss">

@@ -21,7 +21,7 @@
                     remote
                     ref="table"
                     :columns="columns"
-                    :data="data"
+                    :data="floorFiles"
                     :row-props="rowProps"
                     :bordered="false"
                     style="
@@ -47,6 +47,8 @@ import LazyRightSidebar from '../components/right-sidebar.vue'
 import SubNavigation from '../components/sub-navigation.vue'
 import { NTag } from 'naive-ui';
 import millify from 'millify'
+import { useSocket } from '~/app/composables/use-socket';
+import { isEqual } from 'lodash-es';
 
 definePageMeta({
 	auth: true,
@@ -54,6 +56,8 @@ definePageMeta({
 })
 
 const route = useRoute()
+
+const notify = useNaiveNotification()
 
 const columns = [
     {
@@ -88,7 +92,7 @@ const columns = [
             if( row?.status === 'completed' ) {
                 type = 'success'
             }
-            if( row?.status === 'processing' ) {
+            if( ['processing', 'recalculating'].includes(row?.status) ) {
                 type = 'info'
             }
             if( row?.status === 'pending' ) {
@@ -125,13 +129,14 @@ const page = ref(1)
 const limit = ref(20)
 const api = useNAD()
 
-const { data, pending, refresh } = await useAsyncData(
+const { data: floorFiles, pending, refresh } = await useAsyncData(
     () => api.request(readItems('files', {
         fields: [ 'id', 'status', 'file.filesize', 'file.filename_disk', 'file.filename_download', 'file.created_on' ],
         filter: {
             project: Number(route.params?.id),
             type: 'floor'
         },
+        sort: '-date_created',
         page: page.value,
         limit: limit.value
     })),
@@ -155,7 +160,80 @@ const { data, pending, refresh } = await useAsyncData(
     }
 )
 
-console.log('data', data.value)
+const { socket } = await useSocket()
+
+
+async function subscribe() {
+    const { subscription } = await socket?.value?.subscribe('files', {
+        query: {
+            filter: {
+                project: Number(route.params?.id),
+                // type: 'floor'
+            },
+            fields: [ 'id', 'status', 'type', 'file.filesize', 'file.filename_disk', 'file.filename_download', 'file.created_on' ],
+            sort: '-date_created',
+            page: page.value,
+            limit: limit.value
+        },
+    });
+
+    console.log('subscription', subscription)
+
+    for await (const sub of subscription) {
+
+        if( sub?.event === 'init' ) {
+            console.log('subscribe item', sub);
+        }
+
+    }   
+}
+
+onMounted(async () => {
+
+    let lastMessage = null
+
+    socket.value?.onWebSocket('message', function (socketMessage: any) {
+        const { type, data, event } = socketMessage;
+        console.log('message', type)
+        if (event === 'create') {
+            // floorFiles.value.unshift(data?.[0])
+        }
+
+        if (socketMessage.type === 'ping') {
+            socket?.sendMessage({
+                type: 'pong',
+            });
+        }
+        
+        if (event === 'update') {
+            if( isEqual(lastMessage, socketMessage) ) {
+                return
+            }
+            if( ! lastMessage ) {
+                lastMessage = socketMessage
+            }
+            console.log('updated item', socketMessage)
+            let construction = data?.find((item) => item?.type === 'construction')
+            floorFiles.value = floorFiles.value?.map((item) => ({
+                ...item,
+                status: construction?.status
+            }))
+
+            notify.create({
+                type: 'info',
+                title: 'Calculating successfully!',
+                description: `Cost estimator has been calculated!`
+            })
+        }
+    });
+
+    socket.value.onWebSocket('close', function () {
+        console.log({ event: 'onclose' });
+    });
+
+    await subscribe()
+
+})
 
 // const data = ref([
 //     {
