@@ -15,7 +15,7 @@
                         :loading="pending"
                         :disabled="pending || uploading"
                         size="large"
-                        @click="reset"
+                        @click="resetForm"
                         >
                         <i class="i-custom-retry mr-2"></i>
                         Reset
@@ -418,6 +418,14 @@ const {
     getFileStatus: getThumbnailStatus,
     resetUploadField: resetUploadThumbnail
 } = await useUpload(ref<HTMLDivElement>('thumbnailField'))
+
+
+function resetForm() {
+    resetUploadField()
+    resetUploadThumbnail()
+    reset()
+}
+
 
 async function handleSubmit() {
     let data = {...project.value}

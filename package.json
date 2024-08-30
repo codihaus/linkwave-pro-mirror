@@ -35,7 +35,6 @@
         "markdown-it": "^14.1.0",
         "nuxt-directus-seo": "^1.6.1",
         "nuxt-proxy-request": "^1.1.11",
-        "nuxt-tour": "^0.0.12",
         "openai": "^4.47.2",
         "pathe": "^1.1.2",
         "performant-array-to-tree": "^1.11.0",

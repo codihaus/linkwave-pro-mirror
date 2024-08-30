@@ -16,12 +16,4 @@
     </svg>
 </template>
 <script lang="ts" setup>
-withDefaults(
-    defineProps<{
-        dark: boolean
-    }>(),
-    {
-        dark: false
-    }
-)
 </script>

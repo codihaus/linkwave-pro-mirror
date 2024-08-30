@@ -22,49 +22,7 @@
                     <i class="i-custom-ruler text-2xl leading-0 mr-2"></i>
                     Measurement ratio
                 </n-button>
-                <n-modal v-model:show="showMeasurement">
-                    <div class="container lg:px-0 my-10">
-                        <div class="relative p-5 lg:p-6 bg-neutral-06 bg-opacity-90 rounded-xl">
-                            <div class="absolute -top-3 -right-3">
-                                <n-button type="error" icon text @click="showMeasurement = false">
-                                    <i class="i-custom-close text-2xl leading-0"></i>
-                                </n-button>
-                            </div>
-                            <div class="flex items-center p-2 bg-neutral-09 rounded-lg gap-6">
-                                <div class="flex items-center gap-2">
-                                    <div class="text-white">Detected Length:</div>
-                                    <div class="flex items-center gap-3 px-4 bg-neutral-05 rounded">
-                                        <div class="text-red-5 min-w-48 text-center">{{semiData.length}}</div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="text-white">Unit:</div>
-                                    <div class="flex items-center gap-3 px-4 bg-neutral-07 rounded">
-                                        <n-select v-model:value="semiData.unit" :options="unitOptions" disabled style="--n-border: 0" />
-                                    </div>
-                                </div>
-                                <n-button type="info" size="large" @click="startDraw">
-                                    <i class="i-custom-ruler text-2xl leading-0 mr-2"></i>
-                                    {{ canDraw ? 'Stop Draw Line' : 'Draw Measurement Line' }}
-                                </n-button>
-                                <n-button
-                                    type="primary"
-                                    size="large"
-                                    class="ml-auto"
-                                    :disabled="saving"
-                                    :loading="saving"
-                                    @click="onSaveSemiData"
-                                >Save</n-button>
-                            </div>
-                            <div class="rounded-lg mt-4 text-center">
-                                <div class="relative inline-block">
-                                    <canvas ref="drawer" id="drawer" class="absolute w-full h-full inset-0" :class="{'cursor-crosshair': canDraw, 'pointer-events-none': ! canDraw}" ></canvas>
-                                    <img ref="drawerImage" :src="getCMSUrl(`assets/${file?.file?.id}`)" class="">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </n-modal>
+                
             </div>
             <div class="grid gap-5 lg:grid-cols-4 p-5 bg-hex-191B1B">
                 <div class="p-3 rounded border border-neutral-01 border-opacity-10 bg-neutral-07">
@@ -95,11 +53,18 @@
             </div>
             <div class="">
                 <n-data-table
+                    v-if="rows?.length"
                     :columns="columns"
                     :data="rows"
-                    default-expand-all
                     :single-line="false"
                     :row-class-name="rowClassName"
+                    :default-expand-all="true"
+                    :default-expanded-row-keys="defaultExpanded"
+                    :expanded-row-keys="defaultExpanded"
+                    :row-key="(row, index) => row.rowId"
+                    :row-props="rowProps"
+                    @update:checked-row-keys="handleCheck"
+                    :cascade="false"
                     style="
                         --n-th-color: #14E3AE;
                         --n-td-color: transparent;
@@ -111,31 +76,147 @@
                     "
                 />
             </div>
-            <div class="hidden fixed xinline-flex gap-2 left-1/2 bottom-4 transform -translate-x-1/2 rounded-lg bg-neutral-09 p-3">
+            <div class="fixed inline-flex gap-2 left-1/2 bottom-4 transform -translate-x-1/2 rounded-lg bg-neutral-09 p-3">
 
                 <n-button type="primary" ghost :disabled="savingEdit" :loading="savingEdit" @click="isEditMode=true">
                     <i class="i-custom-edit text-xl leading-0 mr-2"></i>
                     <span>{{ 'Edit Mode' }}</span>
                 </n-button>
-                <n-button v-if="isEditMode" type="primary" :disabled="savingEdit" :loading="savingEdit" @click="isEditMode=true">
-                    <i class="i-custom-add text-xl leading-0 mr-2"></i>
-                    <span>{{ 'Add row' }}</span>
+                <n-popover
+                    trigger="click"
+                    scrollable
+                    style="max-height: 240px; --n-color: #343839;"
+                >
+                    <template #trigger>
+                        <div>
+                            <n-button v-if="isEditMode" type="primary" :disabled="savingEdit" :loading="savingEdit" @click="isEditMode=true">
+                                <i class="i-custom-add text-xl leading-0 mr-2"></i>
+                                <span>{{ 'Add row' }}</span>
+                            </n-button>
+                        </div>
+                    </template>
+                    <div>
+                        <n-form-item label="Group" style="--n-label-text-color: #E8ECEF">
+                            <n-select v-model:value="newRow.group" size="large"  :options="newRowGroupOptions" placeholder="Choose group" style="--n-border: 0" />
+                        </n-form-item>
+                        <n-form-item label="Parent" style="--n-label-text-color: #E8ECEF">
+                            <n-select v-model:value="newRow.parent" size="large"  :options="newRowParentOptions" clearable placeholder="Choose parent" style="--n-border: 0" />
+                        </n-form-item>
+                        <n-form-item label="Name" style="--n-label-text-color: #E8ECEF">
+                            <n-input v-model:value="newRow.name" size="large" placeholder="Enter name"></n-input>
+                        </n-form-item>
+                        <n-form-item label="Description" style="--n-label-text-color: #E8ECEF">
+                            <n-input v-model:value="newRow.description" size="large" type="textarea" placeholder="Enter description"></n-input>
+                        </n-form-item>
+                        <n-form-item label="Unit" style="--n-label-text-color: #E8ECEF">
+                            <n-input v-model:value="newRow.unit" size="large" :disabled="!newRow.parent" placeholder="Enter unit" class="disabled-number"/>
+                        </n-form-item>
+                        <n-form-item label="Quantity" style="--n-label-text-color: #E8ECEF">
+                            <n-input-number v-model:value="newRow.quantity" size="large" :disabled="!newRow.parent" placeholder="Enter quantity" class="disabled-number"/>
+                        </n-form-item>
+                        <n-form-item label="Unit cost" style="--n-label-text-color: #E8ECEF">
+                            <n-input-number v-model:value="newRow.cost_price" size="large" :disabled="!newRow.parent" placeholder="Enter unit cost" class="disabled-number"/>
+                        </n-form-item>
+                        <n-form-item label="Labor cost" style="--n-label-text-color: #E8ECEF">
+                            <n-input-number v-model:value="newRow.selling_price" size="large" :disabled="!newRow.parent" placeholder="Enter labor cost" class="disabled-number"/>
+                        </n-form-item>
+                        <n-form-item label="Final price" style="--n-label-text-color: #E8ECEF">
+                            <n-input :value="parseFloat((newRow.quantity * newRow.selling_price).toFixed(2))|| null" size="large" disabled placeholder="0" class="disabled-number" />
+                        </n-form-item>
+                        <n-form-item label="Note" style="--n-label-text-color: #E8ECEF">
+                            <n-input v-model:value="newRow.note" size="large" type="textarea" placeholder="Enter note"></n-input>
+                        </n-form-item>
+                        <n-button
+                            block
+                            type="primary"
+                            size="large"
+                            :disabled="creating"
+                            :loading="creating"
+                            @click="createRow"
+                        >Create row</n-button>
+                    </div>
+                </n-popover>
+                <n-button v-if="isEditMode && ! savingEdit" type="error" :disabled="savingEdit" :loading="savingEdit" @click="deleteRows">
+                    <span>{{ 'Delete selected rows' }}</span>
                 </n-button>
-                <n-button v-if="isEditMode" type="primary" :disabled="savingEdit" :loading="savingEdit" @click="saveRows">
+                <n-button v-if="isEditMode && ! savingEdit" type="primary" :disabled="savingEdit" :loading="savingEdit" @click="saveRows">
                     <span>{{ 'Save' }}</span>
                 </n-button>
             </div>
+            <n-modal v-model:show="showMeasurement">
+                <div class="container lg:px-0 my-10">
+                    <div class="relative p-5 lg:p-6 bg-neutral-06 bg-opacity-90 rounded-xl">
+                        <div class="absolute -top-3 -right-3">
+                            <n-button type="error" icon text @click="showMeasurement = false">
+                                <i class="i-custom-close text-2xl leading-0"></i>
+                            </n-button>
+                        </div>
+                        <div class="flex items-center p-2 bg-neutral-09 rounded-lg gap-6">
+                            <div class="flex items-center gap-2">
+                                <div class="text-white">Actual Length:</div>
+                                <div class="flex items-center gap-3 rounded">
+                                    <!-- <div class="text-red-5 min-w-48 text-center">{{semiData.length}}</div> -->
+                                    <n-input-number v-model:value="semiData.length" class="semi-data-lenght"></n-input-number>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="text-white">Unit:</div>
+                                <div class="flex items-center gap-3 px-4 bg-neutral-07 rounded">
+                                    <n-select v-model:value="semiData.unit" :options="unitOptions" disabled style="--n-border: 0" />
+                                </div>
+                            </div>
+                            <n-button type="info" size="large" @click="startDraw()">
+                                <i class="i-custom-ruler text-2xl leading-0 mr-2"></i>
+                                {{ canDraw ? 'Stop Draw Line' : 'Draw Measurement Line' }}
+                            </n-button>
+                            <n-button
+                                type="primary"
+                                size="large"
+                                class="ml-auto"
+                                :disabled="saving"
+                                :loading="saving"
+                                @click="onSaveSemiData"
+                            >Save</n-button>
+                        </div>
+                        <div class="rounded-lg mt-4 text-center">
+                            <div class="relative inline-block">
+                                <canvas ref="drawer" id="drawer" class="absolute w-full h-full inset-0" :class="{'cursor-crosshair': canDraw, 'pointer-events-none': ! canDraw}" ></canvas>
+                                <img ref="drawerImage" :src="getCMSUrl(`assets/${file?.file?.id}`)" class="">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </n-modal>
+            <n-modal
+                v-model:show="showEditLength"
+                :mask-closable="false"
+            >
+                <div class="my-10 w-75">
+                    <div class="relative p-5 lg:p-6 bg-neutral-06 bg-opacity-90 rounded-xl">
+                        <n-form-item label="Actual Length:">
+                            <n-input-number v-model:value="semiData.length" size="large" class="semi-data-lenght w-full"></n-input-number>
+                        </n-form-item>
+                        <n-form-item label="Unit:">
+                            <n-select v-model:value="semiData.unit"  size="large"  :options="unitOptions" disabled style="--n-border: 0" />
+                        </n-form-item>
+                        <div class="mt-4">
+                            <n-button type="primary" size="large" block @click="showEditLength = false">Set Length</n-button>
+                        </div>
+                    </div>
+                </div>
+            </n-modal>
         </div>
     </layout-view>
 </template>
 <script setup lang="ts">
-import { createItem, customEndpoint, readItem, readItems, updateItem } from '@directus/sdk';
+import { createItem, customEndpoint, deleteItems, readItem, readItems, updateItem } from '@directus/sdk';
 import LazyRightSidebar from '../components/right-sidebar.vue'
 import SubNavigation from '../components/sub-navigation.vue'
 import EditCell from './edit-cell.vue'
 import { NInput, NTag } from 'naive-ui';
 import millify from 'millify'
 import { arrayToTree } from 'performant-array-to-tree';
+import { set } from 'lodash-es';
 
 definePageMeta({
 	auth: true,
@@ -161,203 +242,249 @@ const { getCMSUrl } = useCMSUrl()
 
 const constructionFile = project.value.files?.find((f) => f.type === 'construction')?.id || null
 
+console.log('constructionFile', constructionFile)
+
 const isEditMode = ref(false)
 const editItems = ref({})
 
-const columns = computed(() => [
-    {
-        title: '',
-        key: 'no',
-        // width: '30%',
-        render: (rowData, rowIndex) => {
-            if(rowData?.type === 'group' ) {
-                return rowData?.name
+const columns = computed(() => {
+    let output = [
+        
+        {
+            title: '',
+            key: 'no',
+            // width: '30%',
+            render: (rowData, rowIndex) => {
+                if(rowData?.type === 'group' ) {
+                    return rowData?.name
+                }
+            },
+            colSpan: (rowData, rowIndex) => {
+                let colSpan = 1
+                if(rowData?.type === 'group') {
+                    colSpan = 7
+                }
+
+                // if( rowData?.type === 'item' && !rowData?.parent ) {
+                //     colSpan = 6
+                // }
+
+                // if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
+                //     colSpan = 4
+                // }
+
+                return colSpan
+            },
+        },
+        {
+            title: 'Items group',
+            key: 'name',
+            colSpan: (rowData, rowIndex) => {
+                let colSpan = 1
+                if(rowData?.type === 'group') {
+                    colSpan = 6
+                }
+
+                if( rowData?.type === 'item' && !rowData?.parent ) {
+                    colSpan = 6
+                }
+
+                if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
+                    colSpan = 4
+                }
+
+                return colSpan
+            },
+            render: (rowData) => {
+                if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
+                    return rowData?.name
+                }
+                return h(EditCell, {
+                    editAble: isEditMode.value,
+                    value: rowData?.name,
+                    onUpdateValue(v) {
+                        items.value[rowData.index].name = v
+                        editItems.value[rowData.id] = items.value[rowData.index]
+                    }
+                })
             }
         },
-        colSpan: (rowData, rowIndex) => {
-            let colSpan = 1
-            if(rowData?.type === 'group') {
-                colSpan = 7
-            }
-
-            // if( rowData?.type === 'item' && !rowData?.parent ) {
-            //     colSpan = 6
-            // }
-
-            // if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
-            //     colSpan = 4
-            // }
-
-            return colSpan
-        },
-    },
-    {
-        title: 'Items group',
-        key: 'name',
-        colSpan: (rowData, rowIndex) => {
-            let colSpan = 1
-            if(rowData?.type === 'group') {
-                colSpan = 6
-            }
-
-            if( rowData?.type === 'item' && !rowData?.parent ) {
-                colSpan = 6
-            }
-
-            if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
-                colSpan = 4
-            }
-
-            return colSpan
-        },
-        render: (rowData) => {
-            if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
-                return rowData?.name
-            }
-            return h(EditCell, {
+        {
+            title: 'Description',
+            key: 'description',
+            render: (rowData) => h(EditCell, {
                 editAble: isEditMode.value,
-                value: rowData?.name,
+                value: rowData?.description,
+                inputType: 'textarea',
                 onUpdateValue(v) {
-                    items.value[rowData.index].name = v
+                    items.value[rowData.index].description = v
                     editItems.value[rowData.id] = items.value[rowData.index]
                 }
             })
-        }
-    },
-    {
-        title: 'Description',
-        key: 'description',
-        render: (rowData) => h(EditCell, {
-            editAble: isEditMode.value,
-            value: rowData?.description,
-            inputType: 'textarea',
-            onUpdateValue(v) {
-                items.value[rowData.index].description = v
-                editItems.value[rowData.id] = items.value[rowData.index]
+        },
+        {
+            title: 'Unit',
+            key: 'unit',
+            width: 80,
+            render: (rowData, rowIndex) => {
+                if( rowData?.type === 'item' && !rowData?.parent ) {
+                    return ''
+                }
+                return h(EditCell, {
+                    editAble: isEditMode.value,
+                    value: rowData?.unit,
+                    onUpdateValue(v) {
+                        items.value[rowData.index].unit = v
+                        editItems.value[rowData.id] = items.value[rowData.index]
+                    }
+                })
             }
-        })
-    },
-    {
-        title: 'Unit',
-        key: 'unit',
-        width: 80,
-        render: (rowData, rowIndex) => {
-            if( rowData?.type === 'item' && !rowData?.parent ) {
-                return ''
+        },
+        {
+            title: 'Quantity',
+            key: 'quantity',
+            width: 140,
+            render: (rowData) => {
+                if( rowData?.type === 'item' && !rowData?.parent ) {
+                    return ''
+                }
+                return h(EditCell, {
+                    editAble: isEditMode.value,
+                    value: rowData?.quantity,
+                    inputType: 'number',
+                    onUpdateValue(v) {
+                        items.value[rowData.index].quantity = v
+                        items.value[rowData.index].final_price = parseFloat((v * items.value[rowData.index].selling_price).toFixed(2))
+                        editItems.value[rowData.id] = items.value[rowData.index]
+                    }
+                })
             }
-            return rowData?.unit
-        }
-    },
-    {
-        title: 'Quantity',
-        key: 'quantity',
-        width: 140,
-        render: (rowData) => {
-            if( rowData?.type === 'item' && !rowData?.parent ) {
-                return ''
+        },
+        {
+            title: 'Unit cost ($)',
+            key: 'cost_price',
+            width: 140,
+            colSpan: (rowData, rowIndex) => {
+                let colSpan = 1
+                if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
+                    colSpan = 2
+                }
+
+                return colSpan
+            },
+            render: (rowData, rowIndex) => {
+                if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
+                    return h(
+                        'span',
+                        {
+                            class: 'font-bold'
+                        },
+                        rowData?.cost_price
+                    )
+                }
+                return h(EditCell, {
+                    editAble: isEditMode.value,
+                    value: rowData?.cost_price,
+                    inputType: 'number',
+                    onUpdateValue(v) {
+                        items.value[rowData.index].cost_price = v
+                        editItems.value[rowData.id] = items.value[rowData.index]
+                    }
+                })
+                return parsePrice(rowData?.cost_price)
             }
-            return h(EditCell, {
+        },
+        {
+            title: 'Labor cost ($)',
+            key: 'selling_price',
+            width: 140,
+            render: (rowData) => h(EditCell, {
                 editAble: isEditMode.value,
-                value: rowData?.quantity,
+                value: rowData?.selling_price,
                 inputType: 'number',
                 onUpdateValue(v) {
-                    items.value[rowData.index].quantity = v
-                    items.value[rowData.index].final_price = parseFloat((v * items.value[rowData.index].selling_price).toFixed(2))
+                    items.value[rowData.index].selling_price = v
+                    items.value[rowData.index].final_price = parseFloat((v * items.value[rowData.index].quantity).toFixed(2))
                     editItems.value[rowData.id] = items.value[rowData.index]
                 }
             })
-        }
-    },
-    {
-        title: 'Unit cost ($)',
-        key: 'cost_price',
-        width: 140,
-        colSpan: (rowData, rowIndex) => {
-            let colSpan = 1
-            if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
-                colSpan = 2
-            }
-
-            return colSpan
         },
-        render: (rowData, rowIndex) => {
-            if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
-                return h(
-                    'span',
-                    {
-                        class: 'font-bold'
-                    },
-                    rowData?.cost_price
-                )
-            }
-            return h(EditCell, {
+        {
+            title: 'Final price($)',
+            key: 'final_price',
+            width: 140,
+            colSpan: (rowData, rowIndex) => {
+                let colSpan = 1
+                if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
+                    colSpan = 2
+                }
+
+                return colSpan
+            },
+            render: (rowData) => parsePrice(rowData?.final_price)
+        },
+        {
+            title: 'Note',
+            key: 'note',
+            width: 220,
+            render: (rowData) => h(EditCell, {
                 editAble: isEditMode.value,
-                value: rowData?.cost_price,
-                inputType: 'number',
+                value: rowData?.note,
+                inputType: 'textarea',
+                showAddButton: isEditMode.value,
                 onUpdateValue(v) {
-                    items.value[rowData.index].cost_price = v
+                    items.value[rowData.index].note = v
                     editItems.value[rowData.id] = items.value[rowData.index]
+                },
+                onAdd() {
+                    createRow(rowData)
                 }
             })
-            return parsePrice(rowData?.cost_price)
-        }
-    },
-    {
-        title: 'Labor cost ($)',
-        key: 'selling_price',
-        width: 140,
-        render: (rowData) => h(EditCell, {
-            editAble: isEditMode.value,
-            value: rowData?.selling_price,
-            inputType: 'number',
-            onUpdateValue(v) {
-                items.value[rowData.index].selling_price = v
-                items.value[rowData.index].final_price = parseFloat((v * items.value[rowData.index].quantity).toFixed(2))
-                editItems.value[rowData.id] = items.value[rowData.index]
-            }
-        })
-    },
-    {
-        title: 'Final price($)',
-        key: 'final_price',
-        width: 140,
-        colSpan: (rowData, rowIndex) => {
-            let colSpan = 1
-            if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
-                colSpan = 2
-            }
-
-            return colSpan
         },
-        render: (rowData) => parsePrice(rowData?.final_price)
-    },
-    {
-        title: 'Note',
-        key: 'note',
-        width: 220,
-        render: (rowData) => h(EditCell, {
-            editAble: isEditMode.value,
-            value: rowData?.note,
-            inputType: 'textarea',
-            onUpdateValue(v) {
-                items.value[rowData.index].note = v
-                editItems.value[rowData.id] = items.value[rowData.index]
+    ]
+
+    if( isEditMode.value ) {
+        output.unshift({
+            title: '',
+            type: 'selection',
+            disabled(row) {
+                return row.type !== 'item'
             }
         })
-    },
-])
+    } else {
+        output.filter((col) => col?.type !== 'selection')
+    }
+
+    return output
+})
 
 function rowClassName(rowData, index) {
     if( rowData.type === 'group' ) {
-        return 'estimator-group relative bg-dark-05 font-bold text-base'
+        return 'estimator-group relative bg-dark-05 font-bold text-base group'
     }
     if( rowData?.type === 'item' ) {
-        return  !rowData?.parent ? 'estimator-item-parent relative font-bold bg-neutral-04 bg-opacity-20' : 'estimator-item'
+        return  !rowData?.parent ? 'estimator-item-parent relative font-bold bg-neutral-04 bg-opacity-20 group' : 'estimator-item group'
     }
 
     if( ['subtotal', 'discount', 'grand_total'].includes(rowData?.type) ) {
-        return 'bg-dark-05 font-bold text-base'
+        return 'bg-dark-05 font-bold text-base group'
     }
+}
+
+function rowProps(row) {
+    return {
+        style: 'cursor: pointer;',
+        onClick: () => {
+            
+        }
+    }
+}
+
+const checkedRowKeys = ref([])
+
+function handleCheck(rowKeys) {
+    checkedRowKeys.value = rowKeys
+    console.log('checkedRowKeys', checkedRowKeys.value)
 }
 
 function summary(pageData) {
@@ -376,6 +503,8 @@ function summary(pageData) {
     }
 }
 
+const expandedRows = ref([])
+
 const page = ref(1)
 const limit = ref(20)
 
@@ -386,17 +515,20 @@ const { data: groups, pending, refresh } = await useAsyncData(
     {
         transform: (response) => {
             console.log('response', response)
-            return response?.items?.map((item) => ({
-                ...item,
-                type: 'group',
-                expand: true,
-                children: []
-            })).filter((item) => item?.cost_estimator?.length > 0)
+            return response?.items?.map((item) => {
+                return {
+                    ...item,
+                    type: 'group',
+                    expand: true,
+                    rowId: `group-${item.name}`,
+                    children: []
+                }
+            }).filter((item) => item?.cost_estimator?.length > 0)
         },
     }
 )
 
-const { data: items } = await useAsyncData(
+const { data: items, refresh: refreshCostEstimator } = await useAsyncData(
     () => api.request(readItems('cost_estimator', {
         filter: {
             plan_file: constructionFile
@@ -406,12 +538,15 @@ const { data: items } = await useAsyncData(
     {
         transform: (response) => {
             console.log('response cost_estimator', response)
-            let items = response?.items?.map((item, index) => ({
-                ...item,
-                type: 'item',
-                expand: true,
-                index
-            })) || []
+            let items = response?.items?.map((item, index) => {
+                return {
+                    ...item,
+                    type: 'item',
+                    expand: true,
+                    rowId: `item-${item.id}`,
+                    index
+                }
+            }) || []
             return items
         },
     }
@@ -428,22 +563,27 @@ const subTotalPrice = computed(() => items.value?.reduce(
 ))
 
 const rows = computed(() => ([
-    ...groups.value?.map((group) => ({
-        ...group,
-        children: treeItems.value?.filter((item) => item?.group === group?.name)?.map((item, index) => ({...item}))
-    })),
+    ...groups.value?.map((group) => {
+        return {
+            ...group,
+            children: treeItems.value?.filter((item) => item?.group === group?.name)?.map((item, index) => ({...item}))
+        }
+    }),
     {
         type: 'subtotal',
+        rowId: 'subtotal',
         cost_price: 'SUBTOTAL',
         final_price: subTotalPrice.value
     },
     {
         type: 'discount',
+        rowId: 'discount',
         cost_price: 'Discount',
         final_price: 0
     },
     {
         type: 'grand_total',
+        rowId: 'grand_total',
         cost_price: 'GRAND TOTAL',
         final_price: subTotalPrice.value
     },
@@ -454,21 +594,116 @@ const rows = computed(() => ([
     return true
 }) ))
 
+const defaultExpanded = computed(() => ([
+    ...groups.value?.map((item) => item?.rowId),
+    ...items.value?.filter((item) => !item?.parent)?.map((item) => item?.rowId)
+]))
+
 const savingEdit = ref(false)
-async function saveRows() {
-    console.log('editItems', editItems.value)
+
+const newRowGroupOptions = computed(() => groups.value?.map((group) => ({
+    value: group.name,
+    label: group.name,
+})))
+
+const newRowParentOptions = computed(() => items.value?.filter((item) => !item.parent)?.map((item) => ({
+    value: item.id,
+    label: item.name,
+})))
+
+const newRow = ref({
+    group: newRowGroupOptions.value?.[0]?.value,
+    plan_file: constructionFile,
+    name: '',
+    description: '',
+    note: '',
+    unit: null,
+    quantity: null,
+    cost_price: null,
+    selling_price: null,
+    final_price: null,
+    parent: null
+})
+
+const creating = ref(false)
+
+async function createRow() {
     savingEdit.value = true
 
-    let itemsToSave = Object.values(editItems.value)
-    try {
-
-    } catch(e) {
-
-    } finally {
-
+    if( newRow.value.parent ) {
+        newRow.value.final_price = parseFloat((newRow.value.quantity * newRow.value.selling_price || 0).toFixed(2))
     }
 
-    itemsToSave?.map(async (item) => {
+    await api.request(createItem('cost_estimator', newRow.value)).then((response) => {
+
+        newRow.value.parent = null
+        newRow.value.name = ''
+        newRow.value.description = ''
+        newRow.value.note = ''
+        newRow.value.unit = null
+        newRow.value.quantity = null
+        newRow.value.cost_price = null
+        newRow.value.selling_price = null
+        newRow.value.final_price = null
+        refreshCostEstimator()
+        notify.create({
+            type: 'success',
+            title: 'Created row successfully!',
+            description: `Row ${newRow.value?.name} has been created successfully!`,
+            duration: 3000
+        })
+    }).catch(() => {
+        notify.create({
+            type: 'error',
+            title: 'Creating row failed!',
+            description: `Row ${newRow.value?.name}. Please try again!`,
+            duration: 3000
+        })
+        savingEdit.value = false
+    })
+    savingEdit.value = false
+}
+
+async function deleteRows() {
+    savingEdit.value = true
+    let keys = checkedRowKeys.value?.map((key) => Number(key?.replace('item-', '') ))
+    await api.request(deleteItems('cost_estimator', keys)).then(async () => {
+        checkedRowKeys.value = []
+        notify.create({
+            type: 'success',
+            title: 'Successfully!',
+            description: 'Estimator data has been updated successfully!',
+            duration: 4000
+        })
+        await refreshCostEstimator()
+    }).catch(() => {
+        savingEdit.value = false
+        notify.create({
+            type: 'error',
+            title: 'Deleting row failed!',
+            description: `Please try again!`,
+            duration: 3000
+        })
+    })
+    savingEdit.value = false
+}
+
+async function saveRows() {
+    console.log('editItems', editItems.value)
+
+    
+    savingEdit.value = true
+    
+    let itemsToSave = Object.values(editItems.value)
+    
+    if( itemsToSave?.length < 1 ) {
+        isEditMode.value = false
+        savingEdit.value = false
+        return
+    }
+
+    for await (const item of itemsToSave) {
+
         let data = {
             name: item?.name,
             description: item?.description,
@@ -485,7 +720,15 @@ async function saveRows() {
                 !item?.id ? createItem('cost_estimator', data) : updateItem('cost_estimator', item?.id, data)
             )
         }
+    }
+
+    notify.create({
+        type: 'success',
+        title: 'Successfully!',
+        description: 'Estimator data has been updated successfully!',
+        duration: 4000
     })
+    editItems.value = {}
     savingEdit.value = false
     isEditMode.value = false
 }
@@ -503,7 +746,10 @@ const unitOptions = ref([
 ])
 
 const {
+    points,
     canDraw,
+    showEditLength,
+    showEditLengthPoint,
     drawer,
     drawerImage,
     semiData,
@@ -516,6 +762,8 @@ const {
 function useDrawer() {
     
     const canDraw = ref(false)
+    const showEditLength = ref(false)
+    const showEditLengthPoint = ref({x: 0, y: 0})
     const drawer = ref()
     const drawerImage = ref()
     const semiData = ref({
@@ -551,15 +799,22 @@ function useDrawer() {
     }
 
     function drawPoint(event) {
-        console.log('canvas click')
         // Get the starting point
         const rect = drawer.value?.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
-
+        
         points.value.push({ x, y });
+        let clickedPoint = {
+            x: isVertical.value ? points.value?.[0]?.x : x,
+            y: !isVertical.value ? points.value?.[0]?.y : y
+        }
         isDrawing.value = true;
         if (points.value?.length === 2) {
+            set(points.value, '1', clickedPoint)
+            console.log('canvas click', points.value)
+            showEditLength.value = true
+            showEditLengthPoint.value = clickedPoint
             isDrawing.value = false;
             setSemiData(points.value)
             points.value = [];
@@ -623,25 +878,27 @@ function useDrawer() {
     }
 
     function setSemiData(points = []) {
-        let ratioX = drawerImage.value.naturalWidth / drawerImage.value.width
-        let ratioY = drawerImage.value.naturalHeight / drawerImage.value.height
+        let ratio = drawerImage.value.naturalWidth / drawerImage.value.width
 
         let calculatedPoints = points?.map((p) => ({
-            x: ratioX * p.x,
-            y: ratioY * p.y,
+            x: ratio * p.x,
+            y: ratio * p.y,
         }))
+
+        console.log('calculatedPoints', calculatedPoints)
+
         semiData.value.points = calculatedPoints?.map((p) => ([
             p?.x,
             p?.y
         ]))
 
         semiData.value.displayPoints = points
-        
-        semiData.value.length = isVertical === true ? Math.abs(calculatedPoints[0].y - calculatedPoints[1].y) : Math.abs(calculatedPoints[0].x - calculatedPoints[1].x)
     }
 
     return {
         canDraw,
+        showEditLength,
+        showEditLengthPoint,
         drawer,
         drawerImage,
         semiData,
@@ -712,5 +969,25 @@ async function onSaveSemiData() {
 }
 [data-col-key="no"][style^="--indent-offset: 1"] {
     border-top: 1px solid var(--n-merged-border-color) !important;
+}
+.n-data-table-td {
+    position: relative;
+}
+.semi-data-lenght {
+    .n-input {
+        --n-color: #343839;
+        --n-height: 45px;
+    }
+}
+
+.disabled-number {
+    &.n-input {
+        --n-color-disabled: #232627;
+        --n-border-disabled: 1px solid #232627;
+    }
+    .n-input{
+        --n-color-disabled: #232627;
+        --n-border-disabled: 1px solid #232627;
+    }
 }
 </style>
