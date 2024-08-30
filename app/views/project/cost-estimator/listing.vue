@@ -116,6 +116,9 @@ function rowProps(row) {
     return {
         style: 'cursor: pointer;',
         onClick: () => {
+            if( unsubscribeFiles !== null ) {
+                unsubscribeFiles()
+            }
             navigateTo({
                 name: 'project-cost-estimator-detail',
                 params: {
@@ -164,39 +167,49 @@ const { data: floorFiles, pending, refresh } = await useAsyncData(
 
 const { socket } = await useSocket()
 
+let unsubscribeFiles = null
 
 async function subscribe() {
-    const { subscription } = await socket?.value?.subscribe('files', {
+
+    const { subscription, unsubscribe } = await socket?.value?.subscribe('files', {
         query: {
             filter: {
                 project: Number(route.params?.id),
-                // type: 'floor'
+                type: 'construction'
             },
             fields: [ 'id', 'status', 'type', 'file.filesize', 'file.filename_disk', 'file.filename_download', 'file.created_on' ],
             sort: '-date_created',
-            page: page.value,
-            limit: limit.value
         },
+        uid: 'files'
     });
 
-    console.log('subscription', subscription)
+    unsubscribeFiles = unsubscribe
 
     for await (const sub of subscription) {
 
         if( sub?.event === 'init' ) {
-            console.log('subscribe item', sub);
+            console.log('subscribe item files', sub);
         }
 
-    }   
+    }
+
+    
 }
+
+const lastUpdate = useState('lastCostUpdate')
 
 onMounted(async () => {
 
-    let lastMessage = null
+    // let lastUpdate = null
+
 
     socket.value?.onWebSocket('message', function (socketMessage: any) {
-        const { type, data, event } = socketMessage;
-        console.log('message', type)
+        const { type, data, event, uid } = socketMessage;
+        
+        console.log('type', type)
+
+        if( uid !== 'files' ) return
+
         if (event === 'create') {
             // floorFiles.value.unshift(data?.[0])
         }
@@ -208,24 +221,27 @@ onMounted(async () => {
         }
         
         if (event === 'update') {
-            if( isEqual(lastMessage, socketMessage) ) {
+            let construction = data?.map(({id, status}) => ({id, status}))?.find((item) => item?.status === 'completed')
+            if( lastUpdate.value?.status === construction?.status ) {
                 return
             }
-            if( ! lastMessage ) {
-                lastMessage = socketMessage
+
+            lastUpdate.value = construction
+            
+            console.log( 'construction', construction )
+            if( construction?.status === 'completed' ) {
+                notify.create({
+                    type: 'info',
+                    title: 'Calculating successfully!',
+                    description: `Cost estimator has been calculated. Please check!`,
+                    duration: 5000
+                })
             }
-            console.log('updated item', socketMessage)
-            let construction = data?.find((item) => item?.type === 'construction')
+
             floorFiles.value = floorFiles.value?.map((item) => ({
                 ...item,
                 status: construction?.status
             }))
-
-            notify.create({
-                type: 'info',
-                title: 'Calculating successfully!',
-                description: `Cost estimator has been calculated!`
-            })
         }
     });
 
