@@ -228,6 +228,7 @@ definePageMeta({
 const api = useNAD()
 const route = useRoute()
 const notify = useNaiveNotification()
+const message = useMessage()
 
 function goBack() {
     return {
@@ -943,6 +944,10 @@ const { pending: saving, refresh: saveSemiData } = await useAsyncData(
     })) : {}
 )
 
+const calculatingMessage = ref()
+const placementMessage = useState('placementMessage')
+placementMessage.value = 'bottom-right'
+
 async function onSaveSemiData() {
     try {
         await api.request(updateItem('files', constructionFile,{
@@ -956,10 +961,10 @@ async function onSaveSemiData() {
 
         notify.create({
             type: 'success',
-            title: 'Successfully',
+            title: 'Saved successfully!',
             description: 'Processing calculation!',
-            duration: 3000
         })
+        message = messagAlle.loading( 'Calculating cost...', { duration: 0, closable: true, })
     } catch(e) {
         notify.create({
             type: 'error',
@@ -1038,6 +1043,7 @@ onMounted(async () => {
                     description: `Cost estimator has been recalculated. Please check!`,
                     duration: 5000
                 })
+                message?.destroyAll()
                 refreshCostEstimator()
                 api.request(updateItem('files', route.params?.file_id,{
                     status: 'completed'

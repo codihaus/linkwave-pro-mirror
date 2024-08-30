@@ -6,7 +6,7 @@
             </n-notification-provider>
         </client-only>
         <nuxt-loading-indicator :color="themeConfig?.light?.common?.primaryColor" />
-        <n-message-provider>
+        <n-message-provider :placement="placementMessage">
         <NuxtLayout>
             <NuxtPage />
         </NuxtLayout>
@@ -150,6 +150,10 @@ const themeConfig = ref<ThemeConfig>({
     //     }
     // }
 })
+
+const placementMessage = useState('placementMessage', () => ({
+    default: 'top'
+}))
 
 useHead({
     title: 'Pro - LinkWavePro',
