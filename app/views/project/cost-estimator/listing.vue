@@ -198,6 +198,8 @@ async function subscribe() {
 
 const lastUpdate = useState('lastCostUpdate')
 
+const message = useMessage()
+
 onMounted(async () => {
 
     // let lastUpdate = null
@@ -236,6 +238,7 @@ onMounted(async () => {
                     description: `Cost estimator has been calculated. Please check!`,
                     duration: 5000
                 })
+                message?.destroyAll()
             }
 
             floorFiles.value = floorFiles.value?.map((item) => ({
