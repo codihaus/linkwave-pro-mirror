@@ -5,9 +5,9 @@
                 <i class="i-custom-plus text-2xl leading-0"></i>
             </n-button>
         </template>
-        <template #right-sidebar>
+        <!-- <template #right-sidebar>
             <lazy-right-sidebar />
-        </template>
+        </template> -->
         <template #sub-navigation>
             <sub-navigation />
         </template>
@@ -15,7 +15,7 @@
             <div class="py-3 px-4 lg:px-8 border-b border-neutral-05">
                 <div class="font-semibold text-2xl leading-40px text-neutral-01">Cost Estimator</div>
             </div>
-            <div class="px-4 py-6 lg:px-8 lg:py-8">
+            <div class="max-w-full overscroll-y-auto px-4 py-6 lg:px-8 lg:py-8">
                 <!-- <div class="text-lg mb-4 text-neutral-01">Files</div> -->
                 <n-data-table
                     remote
@@ -64,6 +64,7 @@ const columns = [
         title: 'FILE NAME',
         key: 'file.filename_download',
         width: '30%',
+        minWidth: 200,
         ellipsis: {
             tooltip: true
         }
@@ -76,7 +77,8 @@ const columns = [
     // },
     {
         title: 'DATE UPLOAD',
-        key: 'file.created_on'
+        key: 'file.created_on',
+        minWidth: 200,
     },
     {
         title: 'FILESIZE',

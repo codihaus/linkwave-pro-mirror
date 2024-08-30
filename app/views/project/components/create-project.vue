@@ -179,6 +179,7 @@
                         <div v-for="file in attachments" class="flex gap-2.5">
                             <div class="relative flex-grow">
                                 <n-progress
+                                    class="file-progress"
                                     type="line"
                                     :percentage="file?.percentage"
                                     :height="48"
@@ -479,6 +480,8 @@ async function handleSubmit() {
 
 </script>
 
-<style scoped>
-
+<style lang="scss">
+.n-progress--error .n-progress-icon{
+    opacity: 0
+}
 </style>

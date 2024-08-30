@@ -15,7 +15,7 @@
 
                 <div class="py-3 xpx-4 lg:xpx-8 flex justify-between gap-3 border-b border-neutral-05">
                     <div class="font-semibold text-2xl leading-40px text-neutral-01">Projects</div>
-                    <div class="flex gap-3">
+                    <div class="hidden lg:flex gap-3">
                         <n-button icon text :class="{'text-primary': gridView}" @click="gridView = true">
                             <template #icon>
                                 <i class="i-custom-grid"></i>
@@ -156,7 +156,7 @@
     <lazy-create-project v-model="showCreateProjectModal" @create="refresh"/>
 </template>
 <script setup lang="ts">
-import { readItems, aggregate, deleteItem } from '@directus/sdk'
+import { readItems, aggregate, deleteItem, customEndpoint } from '@directus/sdk'
 import LazyCreateProject from './components/create-project.vue'
 import { upperFirst, get } from 'lodash-es'
 
@@ -210,27 +210,30 @@ const { data: projects, pending, refresh: refreshProjects } = await useAsyncData
     }
 )
 
-const { data: totalPage, refresh: refreshTotalPage } = await useAsyncData(() => api.request(aggregate('projects', {
-    query: {
-        search: searchInput.value || '',
-        filter: {
-            _and: [
-                {
-                    status: {
-                        _eq: 'published'
+const { data: totalPage, refresh: refreshTotalPage } = await useAsyncData('acffg',() => api.request(
+    customEndpoint({
+        path: `/items/projects/pagination`,
+        method: 'GET',
+        params: {
+            search: searchInput.value || '',
+            filter: {
+                _and: [
+                    {
+                        status: {
+                            _eq: 'published'
+                        },
                     },
-                },
-            ]
-        },
-        sort: '-date_created',
-    },
-    aggregate: {
-        countDistinct: ['id']
-    }
-})), {
+                ]
+            },
+            sort: '-date_created',
+        }
+    })
+), {
+    server: false,
     transform: (response) => {
-        response = response?.items
-        let totalItems = Number(get(response, '0.countDistinct.id'))
+        console.log('response agg', response)
+        // let totalItems = Number(get(response, '0.countDistinct.id'))
+        let totalItems = Number(response)
         return Math.ceil(totalItems / limit.value) || 1
     },
     watch: [searchInput]
