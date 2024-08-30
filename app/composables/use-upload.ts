@@ -21,16 +21,18 @@ export async function useUpload(uploadField: Ref, options: any = {
     
     function removeFile(file) {
         files.value = files.value?.filter(({id}) => id !== file?.id)
+        attachments.value = attachments.value?.filter(({id}) => id !== file?.id)
     }
-
+    
     function retryFile(file) {
         uploadField.value?.submit(file?.id)
     }
-
+    
     function resetUploadField() {
         uploadField.value?.clear()
         files.value = []
         attachments.value = []
+        console.log('resetUploadField file', files.value, attachments.value)
     }
 
     const status = {
