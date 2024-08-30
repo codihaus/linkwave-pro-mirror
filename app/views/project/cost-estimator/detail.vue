@@ -945,6 +945,9 @@ const { pending: saving, refresh: saveSemiData } = await useAsyncData(
 
 async function onSaveSemiData() {
     try {
+        await api.request(updateItem('files', constructionFile,{
+            status: 'recalculating'
+        }))
         await saveSemiData()
         await api.request(customEndpoint({
             method: 'POST',
@@ -970,35 +973,41 @@ async function onSaveSemiData() {
 
 const { socket } = await useSocket()
 
+let unsubscribeFiles = null
 
 async function subscribe() {
-    const { subscription } = await socket?.value?.subscribe('cost_estimator', {
+    const { subscription, unsubscribe } = await socket?.value?.subscribe('files', {
         query: {
             filter: {
-                plan_file: constructionFile
+                project: Number(route.params?.id),
+                type: 'construction'
             },
-            fields: [ 'id', 'user_updated', 'date_updated' ],
+            fields: [ 'id', 'status' ],
+            sort: '-date_created',
         },
+        uid: 'files-detail'
     });
 
-    console.log('subscription', subscription)
+    unsubscribeFiles = unsubscribe
 
     for await (const sub of subscription) {
 
         if( sub?.event === 'init' ) {
-            console.log('subscribe item', sub);
+            console.log('subscribe item cost_estimator', sub);
         }
 
-    }   
+    }
 }
+
+const lastUpdate = useState('lastCostUpdate')
 
 onMounted(async () => {
 
-    let lastMessage = null
-
     socket.value?.onWebSocket('message', function (socketMessage: any) {
-        const { type, data, event } = socketMessage;
-        console.log('message', type)
+        const { type, data, event, uid } = socketMessage;
+        
+        console.log('type', type)
+
         if (event === 'create') {
             // floorFiles.value.unshift(data?.[0])
         }
@@ -1010,21 +1019,24 @@ onMounted(async () => {
         }
         
         if (event === 'update') {
-            if( isEqual(lastMessage, socketMessage) ) {
+            let construction = data?.map(({id, status}) => ({id, status}))?.find((item) => item?.status === 'completed')
+            console.log( 'lastUpdate', lastUpdate.value, construction, isEqual(lastUpdate.value, construction), lastUpdate.value?.status === construction?.status )
+
+
+
+            if( lastUpdate.value?.status === construction?.status ) {
                 return
             }
-            if( ! lastMessage ) {
-                lastMessage = socketMessage
-            }
 
-
-            console.log('updated item', socketMessage)
-            let semiAutoUpdated = data?.find((item) => item?.user_updated !== currentUser.value.id)
-            if( semiAutoUpdated ) {
+            lastUpdate.value = construction
+            
+            console.log( 'construction', construction )
+            if( construction?.status === 'completed' ) {
                 notify.create({
                     type: 'info',
                     title: 'Recalculating successfully!',
-                    description: `Cost estimator has been recalculated. Please check!`
+                    description: `Cost estimator has been recalculated. Please check!`,
+                    duration: 5000
                 })
                 refreshCostEstimator()
                 api.request(updateItem('files', route.params?.file_id,{
@@ -1041,6 +1053,7 @@ onMounted(async () => {
     await subscribe()
 
 })
+
 </script>
 
 <style lang="scss">
