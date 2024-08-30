@@ -1,8 +1,11 @@
 import { createDirectus, staticToken, realtime } from "@directus/sdk";
 import { withoutTrailingSlash } from "ufo";
 
+let client;
+
 export function useRealtime() {
-    let apiURL = useCMSUrl()
+    let { getCMSUrl } = useCMSUrl()
+    let apiURL = getCMSUrl()
     apiURL = withoutTrailingSlash(apiURL.replace('https', 'wss')) + '/websocket'
 
     const cookieKey = useState("cookieKey", () => "")
@@ -12,12 +15,12 @@ export function useRealtime() {
             watch: false
         }
     )
-
-    console.log('token', accessToken.value)
     
-    const client = createDirectus(apiURL)
-        .with(staticToken(accessToken.value))
-        .with(realtime());
+    if( ! client ) {
+        client = createDirectus(apiURL)
+            .with(staticToken(accessToken.value))
+            .with(realtime());
+    }
 
     return client
 }
