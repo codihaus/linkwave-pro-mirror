@@ -6,11 +6,21 @@
                     <i class="i-custom-close text-2xl leading-0"></i>
                 </n-button>
             </div>
-            <div class="flex items-center justify-between gap-3 p-5 lg:px-6 border-b border-neutral-09">
-                <div class="text-lg text-neutral-01">Create Project</div>
-                <div>
+            <div class="flex flex-wrap items-center justify-between gap-3 p-5 lg:px-6 border-b border-neutral-09">
+                <div class="w-full lg:w-auto text-lg text-neutral-01">Create Project</div>
+                <div class="flex items-center gap-2">
                     <n-button
-                        block
+                        ghost
+                        type="primary"
+                        :loading="pending"
+                        :disabled="pending || uploading"
+                        size="large"
+                        @click="resetForm"
+                        >
+                        <i class="i-custom-retry mr-2"></i>
+                        Reset
+                    </n-button>
+                    <n-button
                         strong
                         type="primary"
                         :loading="pending"
@@ -45,7 +55,13 @@
                                     :options="countryOptions"
                                     size="large"
                                     filterable
-                                />
+                                >
+                                    <template #empty>
+                                        <div class="text-neutral-03">
+                                            No country found!
+                                        </div>
+                                    </template>
+                                </n-select>
                             </n-form-item>
                             <n-form-item :show-label="false" path="location" label="State">
                                 <n-select
@@ -54,7 +70,13 @@
                                     :options="stateOptions"
                                     size="large"
                                     filterable
-                                />
+                                >
+                                    <template #empty>
+                                        <div class="text-neutral-03">
+                                            {{ ! project?.country ? 'Please select Country first!' : 'No state found!' }}
+                                        </div>
+                                    </template>
+                                </n-select>
                             </n-form-item>
                         </div>
                         <n-form-item :show-label="false" label="Address" path="address">
@@ -75,6 +97,20 @@
                         <n-form-item :show-label="false" label="Contractor's name" path="contractor_name">
                             <n-input v-model:value="project.contractor_name" size="large" placeholder="Contractor's name"></n-input>
                         </n-form-item>
+                        <n-form-item label="Project's Thumbnail" path="logo">
+                            <n-upload
+                                ref="thumbnailField"
+                                action=""
+                                :max="1"
+                                accept="image/*"
+                                list-type="image-card"
+                                :custom-request="uploadThumbnail"
+                                @change="onThumbnailChange"
+                                @before-upload="beforeUploadThumbnail"
+                            >
+                                Click to Upload
+                            </n-upload>
+                        </n-form-item>
                         <n-form-item :show-label="false" label="" path="share">
                             <div class="w-full flex gap-3 px-4 py-3 justify-between border border-neutral-05 rounded">
                                 <div class="text-neutral-02">Share with team</div>
@@ -91,7 +127,13 @@
                                 :loading="loadingUser"
                                 clearable
                                 tag
-                            />
+                            >
+                                <template #empty>
+                                    <div class="text-neutral-03">
+                                        Fill email and press enter to invite member to project
+                                    </div>
+                                </template>
+                            </n-select>
                         </n-form-item>
                         <div v-if="project.share" class="text-neutral-04">
                             Fill email and press enter to invite member to project
@@ -101,7 +143,7 @@
                 </div>
                 <div class="flex flex-col gap-4 lg:w-6/12 px-4 py-5 lg:px-6 lg:py-6">
                     <div class="text-white">Floor Plan</div>
-                    <div v-if="!quota?.can_upload" class="py-2 px-2 mt-2 rounded text-red-300  bg-red-900">
+                    <div v-if="!quota?.can_upload && !quotaLoading" class="py-2 px-2 mt-2 rounded text-red-300  bg-red-900">
                         You have reached the upload limit of this month <span class="font-semibold">({{quota?.current_plan?.max_files_upload - quota?.remaining}}/{{quota?.current_plan?.max_files_upload}} Files)</span>
                     </div>
                     <n-upload
@@ -109,10 +151,10 @@
                         multiple
                         directory-dnd
                         :show-file-list="false"
-                        :file-list="files"
+                        :file-list="attachments"
                         ref="uploadField"
                         action=""
-                        accept="application/pdf"
+                        accept="application/pdf, image/png, image/jpg"
                         :custom-request="upload"
                         @change="onFileChange"
                         @before-upload="beforeUpload"
@@ -124,7 +166,7 @@
                                         <i class="i-custom-upload-2 text-2xl text-primary"></i>
                                     </div>
                                 </div>
-                                <div class="text-lg font-semibold leading-2rem text-neutral-01">
+                                <div class="font-medium leading-2rem text-neutral-01">
                                     Click or Drag & Drop your Floor Plan files here to upload
                                 </div>
                                 <div class="leading-relaxed text-neutral-01 text-opacity-20">
@@ -133,8 +175,8 @@
                             </div>
                         </n-upload-dragger>
                     </n-upload>
-                    <div v-if="files?.length" class="min-h-60 flex flex-col gap-6 p-3 bg-neutral-06 rounded-xl mt-6">
-                        <div v-for="file in files" class="flex gap-2.5">
+                    <div v-if="attachments?.length" class="min-h-60 flex flex-col gap-6 p-3 bg-neutral-06 rounded-xl mt-6">
+                        <div v-for="file in attachments" class="flex gap-2.5">
                             <div class="relative flex-grow">
                                 <n-progress
                                     type="line"
@@ -185,6 +227,7 @@
 
 <script setup lang="ts">
 import { readItems, aggregate, createItem, customEndpoint, inviteUser } from '@directus/sdk'
+import { get } from 'lodash-es';
 
 const showModal = defineModel('modelValue', {
     type: Boolean,
@@ -204,6 +247,7 @@ const project = ref({
     location: null,
     type: 'residential',
     description: null,
+    logo: null,
     share: null,
     project_members: null,
 });
@@ -264,10 +308,13 @@ const { data: countryOptions } = await useAsyncData(
             label: 'Select country',
             value: null
         } */]),
-        transform: (response) => response?.items?.map(({id, name}) => ({
-            label: name,
-            value: id
-        })),
+        transform: (response) => {
+            console.log('response')
+            return response?.items?.map(({id, name}) => ({
+                label: name,
+                value: id
+            }))
+        },
     }
 )
 
@@ -342,7 +389,7 @@ async function searchUser(query: string) {
     
 }
 
-const { data: quota, refresh: refreshQuota } = await useQuota()
+const { data: quota, pending: quotaLoading, refresh: refreshQuota } = await useQuota()
 
 const {
     uploadField,
@@ -358,22 +405,50 @@ const {
     resetUploadField
 } = await useUpload(useState<HTMLDivElement>('uploadField'))
 
+const {
+    uploadField: thumbnailField,
+    attachments: thumbnailAttachments,
+    beforeUpload: beforeUploadThumbnail,
+    onFileChange: onThumbnailChange,
+    upload: uploadThumbnail,
+    uploading: uploadingThumbnail,
+    files: thumbnailFiles,
+    removeFile: removeThumbnail,
+    retryFile: retryThumbnail,
+    getFileStatus: getThumbnailStatus,
+    resetUploadField: resetUploadThumbnail
+} = await useUpload(ref<HTMLDivElement>('thumbnailField'))
+
+
+function resetForm() {
+    resetUploadField()
+    resetUploadThumbnail()
+    reset()
+}
+
+
 async function handleSubmit() {
-    let data = project.value
+    let data = {...project.value}
     delete data.country
     delete data.share
 
     if( files.value?.length ) {
         data.files = {
             create: files.value?.filter((f) => f?.file_id)?.map((file) => ({
-                status: 'published',
-                type: "floor",
+                status: 'processing',
+                type: file?.type?.includes('pdf') ? 'construction' : "floor",
                 file: file?.file_id
             })),
             update: [],
             delete: [],
         }
     }
+
+    if( thumbnailFiles.value?.length ) {
+        data.logo = get(thumbnailFiles.value, '0.file_id')
+    }
+
+    console.log('data', data)
 
     try {
         const response = await api.request(customEndpoint({

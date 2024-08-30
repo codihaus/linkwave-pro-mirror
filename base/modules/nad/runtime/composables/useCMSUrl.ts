@@ -1,9 +1,15 @@
 import {useRuntimeConfig} from "#app";
 import {withoutTrailingSlash} from "ufo";
 
-export const useCMSUrl = (path: string = '') => {
+export const useCMSUrl = () => {
     const configRuntime = useRuntimeConfig()
     const baseUrl = withoutTrailingSlash(configRuntime?.app?.cms?.url ?? '/')
 
-    return withoutTrailingSlash(`${baseUrl}/${path}`)
+    function getCMSUrl(path: string = '') {
+        return withoutTrailingSlash(`${baseUrl}/${path}`)
+    }
+
+    return {
+        getCMSUrl
+    }
 }

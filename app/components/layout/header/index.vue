@@ -8,14 +8,14 @@
             </n-button>
         </div>
         <div class="lg:w-2/12">
-            <layout-logo dark/>
+            <nuxt-link to="/"><layout-logo/></nuxt-link>
         </div>
-        <div class="lg:w-4/10">
+        <div class="lg:w-4/10 lg:mx-auto">
             <n-input
                 v-model:value="searchInput"
                 type="text"
                 round
-                placeholder="Enter the name of your project"
+                placeholder="Search project by name, address, scope,...etc..."
                 style="--n-border: 1px solid rgba(35, 38, 39, 0.90)"
             >
                 <template #prefix>
@@ -52,7 +52,8 @@ import { LayoutHeaderProfileMenu } from '#components'
 const route = useRoute()
 
 const currentUser = useState("currentUser")
-const avatar = computed(() => currentUser.value?.avatar ? useCMSUrl(`assets/${currentUser.value?.avatar}`) : null)
+const { getCMSUrl } = useCMSUrl()
+const avatar = computed(() => currentUser.value?.avatar ? getCMSUrl(`assets/${currentUser.value?.avatar}`) : null)
 
 const menu = ref([
     {
@@ -102,7 +103,7 @@ function onCollapse() {
     sidebarCollapsed.value = !sidebarCollapsed.value
 }
 
-const searchInput = ref()
+const searchInput = useState('searchInput')
 
 </script>
 <style lang="scss">
