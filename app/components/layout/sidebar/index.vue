@@ -4,7 +4,7 @@
         :collapsed="sidebarCollapsed"
         collapse-mode="width"
         :collapsed-width="68"
-        :width="260"
+        :width="hasSubNavigation ? 68 : 260"
         content-class="sidebar !overflow-hidden"
         @update:collapsed="sidebarCollapsed = $event"
         class="first-step-1 lt-lg:absolute z-99 sidebar lt-lg:transform lt-lg:transition-transform lt-lg:duration-350"
@@ -17,7 +17,7 @@
                 </svg>
             </n-button>
         </div>
-        <div class="sidebar bg-neutral-07" :class="[sidebarCollapsed ? 'px-4' : 'px-3']">
+        <div class="sidebar bg-neutral-07" :class="[sidebarCollapsed ? 'px-4' : (hasSubNavigation ? 'px-4' :'px-3')]">
             <!-- <n-button
                 class="btn-new-request"
                 type="primary"
@@ -32,26 +32,26 @@
                 
             </n-button> -->
             <div class="py-6">
-                <nuxt-link v-for="item in mainNavigation" :to="item?.to" class="menu-item py-3 flex items-center rounded hover:text-primary" :class="sidebarCollapsed ? 'justify-center' : 'px-5'" :active-class="item?.to?.startsWith('#') ? '' : 'active'">
-                    <i class="text-2xl leading-0 flex-shrink-0" :class="item?.icon"></i>
-                    <span v-if="!sidebarCollapsed" class="ml-5">{{ item?.label }}</span>
+                <nuxt-link v-for="item in mainNavigation" :to="item?.to" class="menu-item py-3 flex items-center rounded hover:text-primary" :class="sidebarCollapsed ? 'justify-center' : (hasSubNavigation ? '' : 'px-5')" :active-class="item?.to?.startsWith('#') ? '' : 'active'">
+                    <i class="text-2xl leading-0 flex-shrink-0" :class="[item?.icon, {'mx-auto lg:mx-0': hasSubNavigation}]"></i>
+                    <span v-if="!sidebarCollapsed" class="ml-5" :class="{'hidden': hasSubNavigation}">{{ item?.label }}</span>
                 </nuxt-link>
             </div>
-            <n-scrollbar class="h-[calc(100dvh-346px)] leading-title p-4 border-t border-neutral-06">
+            <!-- <n-scrollbar class="h-[calc(100dvh-346px)] leading-title p-4 border-t border-neutral-06">
                 <div :class="{'hidden': sidebarCollapsed}">
                     <div class="flex items-center gap-5 text-sm text-neutral-04 font-medium">
                         <i class="i-custom-project-2 text-2xl leading-0 text-neutral-04"></i>
                         Recent Projects
                     </div>
                     <div class="space-y-4 mt-5  pb-6">
-                        <!-- <nuxt-link v-for="thread in recentThreads" :to="{name: 'chat-thread', params: {id: getThreadParamID(thread?.id)}}" class="flex gap-2" @click="closeSidebarOnMobile">
+                        <nuxt-link v-for="thread in recentThreads" :to="{name: 'chat-thread', params: {id: getThreadParamID(thread?.id)}}" class="flex gap-2" @click="closeSidebarOnMobile">
                             <i class="inline-block text-xl i-ph:chat-bold flex-shrink-0"></i>
                             <div class="line-clamp-1 text-ellipsis">{{ thread?.title }}</div>
-                        </nuxt-link> -->
+                        </nuxt-link>
                     </div>
                 </div>
-            </n-scrollbar>
-            <div class="hidden text-content-02 pt-4 leading-title w-full absolute left-0 bottom-0 pb-10 bg-black"  :class="[sidebarCollapsed ? 'px-4' : 'px-5', ]">
+            </n-scrollbar> -->
+            <!-- <div class="hidden text-content-02 pt-4 leading-title w-full absolute left-0 bottom-0 pb-10 bg-black"  :class="[sidebarCollapsed ? 'px-4' : 'px-5', ]">
                 <div class="space-y-8">
                     <div class="flex gap-2 items-center">
                         <icons-help class="inline-block" />
@@ -62,14 +62,25 @@
                         <div :class="{'hidden': sidebarCollapsed}">Setting</div>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
     </n-layout-sider>
+    <div v-if="route.meta?.hideSidebar" class="hidden lg:block"></div>
 </template>
 
 <script setup lang="ts">
 import { readItems } from '@directus/sdk';
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
+
+
+const props = withDefaults(
+    defineProps<{
+        hasSubNavigation: boolean
+    }>(),
+    {
+        hasSubNavigation: false,
+    }
+)
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
 // const greaterThanMd = breakpoints.greater('md')
@@ -80,8 +91,10 @@ const route = useRoute()
 
 
 const currentUser = useState('currentUser')
-const sidebarCollapsed = useState('sidebarCollapsed', () => route.meta?.sidebarCollapsed)
+const sidebarCollapsed = useState('sidebarCollapsed', () => true)
 sidebarCollapsed.value = route.meta?.sidebarCollapsed || false
+
+closeSidebarOnMobile()
 
 const mainNavigation = ref([
     {
@@ -165,6 +178,10 @@ watch([smallerThanLg, greaterThanLg], () => {
     if( greaterThanLg.value ) {
         sidebarCollapsed.value = false
     }
+})
+
+onMounted(() => {
+    closeSidebarOnMobile()
 })
 </script>
 
