@@ -17,6 +17,7 @@
                 round
                 placeholder="Search project by name, address, scope,...etc..."
                 style="--n-border: 1px solid rgba(35, 38, 39, 0.90)"
+                @update:value="onSearch"
             >
                 <template #prefix>
                     <i class="i-custom-search text-2xl leading-0"></i>
@@ -105,6 +106,16 @@ function onCollapse() {
 
 const searchInput = useState('searchInput')
 
+function onSearch(keyword) {
+    if( !['home', 'project-listing'].includes(route?.name) ) {
+        navigateTo({
+            name: 'project-listing',
+            query: {
+                s: keyword
+            }
+        })
+    }
+}
 </script>
 <style lang="scss">
 </style>
