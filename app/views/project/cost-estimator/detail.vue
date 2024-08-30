@@ -11,7 +11,7 @@
         <template #sub-navigation>
             <sub-navigation />
         </template> -->
-        <div class="">
+        <div class="pb-20">
             <div class="flex flex-wrap items-center gap-3 py-3 px-4 lg:px-8 bg-dark-05">
                 <nuxt-link :to="goBack()">
                     <i class="i-custom-arrow-narrow-left text-2xl leading-0 text-neutral-01"></i>
@@ -53,7 +53,6 @@
             </div>
             <div class="max-w-full overflow-x-auto">
                 <n-data-table
-                    v-if="rows?.length"
                     :columns="columns"
                     :data="rows"
                     :single-line="false"
@@ -74,7 +73,14 @@
                         --n-td-color-hover: #444;
                         --n-td-padding: 16px;
                     "
-                />
+                >
+                    <template #empty>
+                        <div class="inline-flex items-center text-neutral-01">
+                            <i class="i-custom-process text-2xl leading-0 animate-spin mr-2"></i>
+                            Calculating cost....
+                        </div>
+                    </template>
+                </n-data-table>
             </div>
             <div class="fixed inline-flex gap-2 left-1/2 bottom-4 transform -translate-x-1/2 rounded-lg bg-neutral-09 p-3">
 
@@ -568,37 +574,43 @@ const subTotalPrice = computed(() => items.value?.reduce(
     0
 ))
 
-const rows = computed(() => ([
-    ...groups.value?.map((group) => {
-        return {
-            ...group,
-            children: treeItems.value?.filter((item) => item?.group === group?.name)?.map((item, index) => ({...item}))
-        }
-    }),
-    {
-        type: 'subtotal',
-        rowId: 'subtotal',
-        cost_price: 'SUBTOTAL',
-        final_price: subTotalPrice.value
-    },
-    {
-        type: 'discount',
-        rowId: 'discount',
-        cost_price: 'Discount',
-        final_price: 0
-    },
-    {
-        type: 'grand_total',
-        rowId: 'grand_total',
-        cost_price: 'GRAND TOTAL',
-        final_price: subTotalPrice.value
-    },
-].filter(({children, type}) => {
-    if( type === 'group' && !children?.length ) {
-        return false
+const rows = computed(() => {
+    console.log('items.value', items.value)
+    if( items.value?.length < 1 ) {
+        return []
     }
-    return true
-}) ))
+    return [
+        ...groups.value?.map((group) => {
+            return {
+                ...group,
+                children: treeItems.value?.filter((item) => item?.group === group?.name)?.map((item, index) => ({...item}))
+            }
+        }),
+        {
+            type: 'subtotal',
+            rowId: 'subtotal',
+            cost_price: 'SUBTOTAL',
+            final_price: subTotalPrice.value
+        },
+        {
+            type: 'discount',
+            rowId: 'discount',
+            cost_price: 'Discount',
+            final_price: 0
+        },
+        {
+            type: 'grand_total',
+            rowId: 'grand_total',
+            cost_price: 'GRAND TOTAL',
+            final_price: subTotalPrice.value
+        },
+    ].filter(({children, type}) => {
+        if( type === 'group' && !children?.length ) {
+            return false
+        }
+        return true
+    })
+})
 
 const defaultExpanded = computed(() => ([
     ...groups.value?.map((item) => item?.rowId),
