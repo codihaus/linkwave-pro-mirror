@@ -12,7 +12,7 @@
             <sub-navigation />
         </template> -->
         <div class="">
-            <div class="flex items-center gap-3 py-3 px-4 lg:px-8 bg-dark-05">
+            <div class="flex flex-wrap items-center gap-3 py-3 px-4 lg:px-8 bg-dark-05">
                 <nuxt-link :to="goBack()">
                     <i class="i-custom-arrow-narrow-left text-2xl leading-0 text-neutral-01"></i>
                 </nuxt-link>
@@ -51,7 +51,7 @@
                     </div>
                 </div>
             </div>
-            <div class="">
+            <div class="max-w-full overflow-x-auto">
                 <n-data-table
                     v-if="rows?.length"
                     :columns="columns"
@@ -78,24 +78,24 @@
             </div>
             <div class="fixed inline-flex gap-2 left-1/2 bottom-4 transform -translate-x-1/2 rounded-lg bg-neutral-09 p-3">
 
-                <n-button type="primary" ghost :disabled="savingEdit" :loading="savingEdit" @click="isEditMode=true">
-                    <i class="i-custom-edit text-xl leading-0 mr-2"></i>
-                    <span>{{ 'Edit Mode' }}</span>
+                <n-button type="primary" ghost :disabled="savingEdit" :loading="savingEdit" @click="isEditMode=!isEditMode">
+                    <i class="i-custom-edit text-xl leading-0"></i>
+                    <span class="ml-2 hidden lg:block">{{ 'Edit Mode' }}</span>
                 </n-button>
                 <n-popover
                     trigger="click"
                     scrollable
-                    style="max-height: 240px; --n-color: #343839;"
+                    style="max-height: 360px;--n-color: #343839;"
                 >
                     <template #trigger>
                         <div>
                             <n-button v-if="isEditMode" type="primary" :disabled="savingEdit" :loading="savingEdit" @click="isEditMode=true">
-                                <i class="i-custom-add text-xl leading-0 mr-2"></i>
-                                <span>{{ 'Add row' }}</span>
+                                <i class="i-custom-add text-xl leading-0"></i>
+                                <span class="ml-2 hidden lg:block">{{ 'Add row' }}</span>
                             </n-button>
                         </div>
                     </template>
-                    <div>
+                    <div class="">
                         <n-form-item label="Group" style="--n-label-text-color: #E8ECEF">
                             <n-select v-model:value="newRow.group" size="large"  :options="newRowGroupOptions" placeholder="Choose group" style="--n-border: 0" />
                         </n-form-item>
@@ -137,7 +137,8 @@
                     </div>
                 </n-popover>
                 <n-button v-if="isEditMode && ! savingEdit" type="error" :disabled="savingEdit" :loading="savingEdit" @click="deleteRows">
-                    <span>{{ 'Delete selected rows' }}</span>
+                    <i class="i-custom-trash text-xl leading-0"></i>
+                    <span class="ml-2 hidden lg:block">{{ 'Delete selected rows' }}</span>
                 </n-button>
                 <n-button v-if="isEditMode && ! savingEdit" type="primary" :disabled="savingEdit" :loading="savingEdit" @click="saveRows">
                     <span>{{ 'Save' }}</span>
@@ -281,6 +282,7 @@ const columns = computed(() => {
         {
             title: 'Items group',
             key: 'name',
+            minWidth: 200,
             colSpan: (rowData, rowIndex) => {
                 let colSpan = 1
                 if(rowData?.type === 'group') {
@@ -314,6 +316,7 @@ const columns = computed(() => {
         {
             title: 'Description',
             key: 'description',
+            minWidth: 200,
             render: (rowData) => h(EditCell, {
                 editAble: isEditMode.value,
                 value: rowData?.description,
