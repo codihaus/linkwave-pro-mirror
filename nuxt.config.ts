@@ -28,7 +28,7 @@ export default defineNuxtConfig({
         }
     },
     naiveui,
-    proxy,
+    // proxy,
     i18n,
     site: {
         url: withoutTrailingSlash(process.env.NUXT_PUBLIC_URL),
