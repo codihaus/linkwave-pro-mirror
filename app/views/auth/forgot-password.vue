@@ -99,6 +99,16 @@ rules.value = {
             validator: (rule, value) => value === null || isValidEmail(value),
         },
     ],
+    password: [
+        {
+            required: true,
+            message: 'Password is required'
+        },
+        {
+            message: "Password must be at least 8 characters ",
+            validator: () => model.value.password.length > 7,
+        },
+    ],
 };
 
 const api = useNAD()
