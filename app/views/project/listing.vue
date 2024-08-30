@@ -184,7 +184,7 @@ const { data: projects, pending, refresh: refreshProjects } = await useAsyncData
     () => api.request(readItems('projects', {
         fields: ['id', 'name', 'logo', 'type', 'location.name', 'description'],
         // fields: ['*'],
-        search: searchInput.value || '',
+        search: searchInput.value || route.query?.s || '',
         filter: {
             _and: [
                 {
@@ -215,7 +215,7 @@ const { data: totalPage, refresh: refreshTotalPage } = await useAsyncData('acffg
         path: `/items/projects/pagination`,
         method: 'GET',
         params: {
-            search: searchInput.value || '',
+            search: searchInput.value || route.query?.s || '',
             filter: {
                 _and: [
                     {
